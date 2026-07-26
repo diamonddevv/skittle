@@ -1,7 +1,9 @@
+"""
+super epic amazing pygame engine that definetely never breaks
+"""
+
 import pygame
 import colorama
-
-from src.skittle import window
 
 __VERSION__: str = "0.0.0"
 

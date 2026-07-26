@@ -1,27 +1,30 @@
 import pygame
 import typing
+import moderngl
+
+from skittle import render
 
 class Window():
-    type _DrawCallback = typing.Callable[[], typing.Any]
-    type _UpdateCallback = typing.Callable[[float], typing.Any]
 
     def __init__(self, 
-                 title: str, 
-                 width: int, height: int,
+                 title: str = "skittle engine", 
+                 width: int = 1280, height: int = 720,
 
                  target_fps: int = 60,
-                 icon_path: str = "",
-                 draw_callback: Window._DrawCallback = lambda: None,
-                 update_callback: Window._UpdateCallback = lambda dt: None,
+                 icon_path: str = ""
                  ) -> None:
         self.title = title
         self.target_fps = target_fps
-        self.draw_callback = draw_callback
-        self.update_callback = update_callback
+
 
         self._running = False
-        self._window_surface = pygame.display.set_mode((width, height), pygame.RESIZABLE)
+        self._window_surface = pygame.display.set_mode((width, height), pygame.RESIZABLE | pygame.OPENGL)
         self._clock = pygame.Clock()
+
+        pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MAJOR_VERSION, 3)
+        pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MINOR_VERSION, 3)
+        self.mgl_ctx = moderngl.create_context()
+        self.camera = skittle.render.Camera(width, height)
 
         if icon_path != "":
             image = pygame.image.load(icon_path).convert_alpha()
@@ -33,13 +36,20 @@ class Window():
 
         while self._running:
             self.event_handle()
-            self.update_callback(dt)
+            self.update(dt)
 
-            self.draw_callback()
+            self.mgl_ctx.clear(0,0,0)
+            self.draw(self.mgl_ctx, self.camera)
             pygame.display.flip()
 
             pygame.display.set_caption(self.title)
             dt = self._clock.tick(self.target_fps) / 1000
+
+    def update(self, dt: float):
+        pass
+
+    def draw(self, ctx: moderngl.Context, camera: skittle.render.Camera):
+        pass
 
     def event_handle(self):
         for e in pygame.event.get():
