@@ -1,5 +1,4 @@
 import pygame
-import moderngl
 
 class Spritesheet():
     def __init__(self, 
@@ -23,4 +22,9 @@ class Spritesheet():
         px_tl_x = cell_x * (self.sprite_w + self.seperation_x)
         px_tl_y = cell_y * (self.sprite_h + self.seperation_y)
 
-        return px_step_x * px_tl_x, px_step_y * px_tl_y, px_step_x * self.sprite_w, px_step_y * self.sprite_h
+        u0 = px_step_x * px_tl_x
+        v0 = px_step_y * px_tl_y
+        u1 = u0 + px_step_x * self.sprite_w
+        v1 = v0 + px_step_y * self.sprite_h
+
+        return u0, v0, u1, v1
