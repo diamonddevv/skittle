@@ -14,7 +14,7 @@ class Spritesheet():
         self.seperation_x = seperation_x
         self.seperation_y = seperation_y
 
-    def xyuv(self, cell_x: int, cell_y: int) -> tuple[float, float, float, float]:
+    def uv(self, cell_x: int, cell_y: int) -> tuple[float, float, float, float]:
         sheet_w, sheet_h = self.surface.size
         px_step_x = 1 / sheet_w
         px_step_y = 1 / sheet_h
