@@ -1,15 +1,17 @@
+import _ctx
+
 import moderngl
-from _ctx import asd
-import pygame
+import skittle
 
-class Test_TexturedQuad(asd.render.window.Window):
+class Test_TexturedQuad(skittle.render.Window):
     def __init__(self) -> None:
-        super().__init__("textured quad", 500, 500)
+        super().__init__("textured quad", 500, 500, fps_in_title=True)
         
-        self.img = pygame.image.load("tests/asset/scotland.png").convert_alpha()
-        self.quad = asd.render.mesh.TextureQuad(self.mgl_ctx, 1, 1, self.img)
+        self.img = skittle.resource.image("tests/asset/scotland.png")
+        self.quad = skittle.render.TextureQuad(self.mgl_ctx, 64, 64, self.img)
 
-    def draw(self, ctx: moderngl.Context, camera: asd.render.Camera):
+    def draw(self, ctx: moderngl.Context, camera: skittle.render.Camera):
+        self.mgl_ctx.clear(1,1,1)
         self.quad.render(camera)
 
 

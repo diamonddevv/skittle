@@ -9,12 +9,11 @@ vrtx = """
 
 in vec2 in_position;
 in vec3 in_color;
-uniform float u_time;
 out vec3 v_color;
 
 void main() {
     v_color = in_color;
-    gl_Position = vec4(in_position + vec2(cos(u_time), sin(u_time)), 0.0, 1.0);
+    gl_Position = vec4(in_position, 0.0, 1.0);
 }
 """
 
@@ -32,7 +31,7 @@ void main() {
 
 
 
-class Test_Window(skittle.render.window.Window):
+class Test_Window(skittle.render.Window):
     def __init__(self) -> None:
         super().__init__("hello, world!", 500, 500)
 
@@ -57,14 +56,13 @@ class Test_Window(skittle.render.window.Window):
 
     def update(self, dt: float):
         self.age += dt
-        self.program['u_time'].value = self.age
 
-    def draw(self, ctx: moderngl.Context, camera: asd.render.Camera):
+    def draw(self, ctx: moderngl.Context, camera: skittle.render.Camera):
         self.vao.render(moderngl.TRIANGLES)
 
 
 if __name__ == "__main__":
-    asd.init()
+    skittle.init()
 
     wnd = Test_Window()
     wnd.run()

@@ -1,9 +1,7 @@
-from moderngl import TRIANGLES
 import pygame
 import numpy
 import moderngl
-
-from src import skittle
+import skittle
 
 class Mesh():
     def __init__(self, 
@@ -34,34 +32,38 @@ class Mesh():
         self.vao.release()
 
     @staticmethod
-    def quad(w: int, h: int) -> tuple[list[float], list[int]]:
-        hw, hh = w/2, h/2
+    def uv_quad(width: int, height: int, x: float = 0.0, y: float = 0.0, u: float = 1.0, v: float = 1.0, ) -> tuple[list[float], list[int]]:
+        hw = width / 2
+        hh = height / 2
+
         vertices = [
-            -hw,  hh, 0.0, 1.0,
-             hw,  hh, 1.0, 1.0,
-             hw, -hh, 1.0, 0.0
-            -hw, -hh, 0.0, 0.0
-        ]
+                    -hw,  hh, x, v, # bottom left
+                     hw,  hh, u, v, # bottom right
+                     hw, -hh, u, y, # top right
+                    -hw, -hh, x, y  # top left
+                    ]
         indices = [
             0, 1, 2,
             2, 3, 0
-        ]
+            ]
+
         return vertices, indices
+
 
 class TextureQuad(Mesh):
     VERTEX: str = """
 #version 330 core
 
 in vec2 in_position;
-in vec3 in_color;
+in vec2 in_uv;
 
 uniform mat4 u_proj_view;
 uniform vec2 u_model_pos;   // per-object world position
 
-out vec3 v_color;
+out vec2 v_uv;
 
 void main() {
-    v_color = in_color;
+    v_uv = in_uv;
     vec2 world_pos = in_position + u_model_pos;
     gl_Position = u_proj_view * vec4(world_pos, 0.0, 1.0);
 }
@@ -80,11 +82,15 @@ void main() {
 }
 """
 
-    def __init__(self, ctx: moderngl.Context, w: int, h: int, texture: pygame.Surface, vertex: str = VERTEX, fragment: str = FRAGMENT) -> None:
-        vertices, indices = Mesh.quad(w, h)
+    def __init__(self, ctx: moderngl.Context, width: int, height: int, texture: pygame.Surface, x: float = 0.0, y: float = 0.0, u: float = 1.0, v: float = 1.0, vertex: str = VERTEX, fragment: str = FRAGMENT) -> None:
+
+        vertices, indices = Mesh.uv_quad(width, height, x, y, u, v)
+        
         super().__init__(
             ctx, vertex, fragment, 
-            vertices, "2f 2f", ['in_position', 'in_uv'], indices)
+            vertices, "2f 2f", ['in_position', 'in_uv'], 
+            indices
+        )
         self.texture: moderngl.Texture
         self.load_texture(texture)
     
@@ -97,6 +103,6 @@ void main() {
     def render(self, camera: skittle.render.Camera, mode: int = moderngl.TRIANGLES):
         self.texture.use(0)
         self.program['u_texture'].value = 0
-        self.program['u_proj_view'].write(camera.get_projection_view_matrix().tobytes())
+        self.program['u_proj_view'].write(camera.proj_view_mat().to_bytes())
         self.program['u_model_pos'].value = (0, 0)
-        return super().render(mode)
+        return super().render(camera, mode)
