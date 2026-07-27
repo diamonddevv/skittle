@@ -32,7 +32,7 @@ class Mesh():
         self.vao.release()
 
     @staticmethod
-    def uv_quad(width: int, height: int, x: float = 0.0, y: float = 0.0, u: float = 1.0, v: float = 1.0, ) -> tuple[list[float], list[int]]:
+    def uv_quad(width: int, height: int, x: float = 0.0, y: float = 0.0, u: float = 1.0, v: float = 1.0) -> tuple[list[float], list[int]]:
         hw = width / 2
         hh = height / 2
 

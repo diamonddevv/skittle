@@ -65,5 +65,10 @@ class Window():
                 self.mgl_ctx.viewport = (0, 0, e.w, e.h)
                 self.camera.resize(e.w, e.h)
 
+            # event handlers
+            if e.type in skittle._PYGAME_EVENT_HANDLERS:
+                for callback in skittle._PYGAME_EVENT_HANDLERS[e.type]:
+                    callback(e)
+
     def close(self):
         self._running = False

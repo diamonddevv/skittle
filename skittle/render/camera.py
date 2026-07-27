@@ -33,6 +33,9 @@ class Camera():
     def set_position(self, x: float, y: float):
         self.position = glm.vec2(x, y)
 
+    def move(self, x: float, y: float):
+        self.position -= glm.vec2(x, -y)
+
     def set_zoom(self, zoom: float = 1.0):
         self.zoom = zoom
 
