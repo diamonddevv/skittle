@@ -1,6 +1,7 @@
 import _ctx
 
 from pyglm import glm
+import math
 import moderngl
 import pygame
 import skittle
@@ -10,15 +11,18 @@ class Test_Spritesheet(skittle.render.Window):
         super().__init__("spritesheet", 500, 500, fps_in_title=True)
         
         self.spritesheet = skittle.resource.spritesheet("tests/asset/spritesheet.png")
-        self.quad = skittle.render.SpritesheetQuad(self.mgl_ctx, 64, 64, self.spritesheet)
+        self.quad = skittle.render.SpritesheetQuad(self.mgl_ctx, self.spritesheet)
 
         self.panning = False
         self.last_mouse_pos = glm.vec2()
 
         self.sprite_idx_x = 0
         self.sprite_idx_y = 0
+        self.age = 0.0
 
     def update(self, dt: float):
+        self.age += dt
+
         just_pressed = pygame.key.get_just_pressed()
 
         if just_pressed[pygame.K_UP]: self.sprite_idx_y -= 1
@@ -37,6 +41,8 @@ class Test_Spritesheet(skittle.render.Window):
             self.sprite_idx_y = 7
 
         self.quad.set_sprite((self.sprite_idx_x, self.sprite_idx_y))
+        self.quad.rotation_radians += .75 * math.pi * dt;
+        self.quad.scale = math.sin(self.age) * 2 + 5
 
         
 

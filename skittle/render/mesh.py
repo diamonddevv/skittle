@@ -16,12 +16,28 @@ in vec2 in_uv;
 
 uniform mat4 u_proj_view;
 uniform vec2 u_position;
+uniform float u_scale;
+uniform float u_rot_rad;
 
 out vec2 v_uv;
 
+const float PI = 3.14159;
+
+vec2 rotate(vec2 uv, float angle)
+{
+    angle += PI/2;
+	mat2 rotation = mat2(vec2(sin(angle), -cos(angle)),
+						vec2(cos(angle), sin(angle)));
+	
+	uv -= vec2(0.5);
+	uv = uv * rotation;
+	uv += vec2(0.5);
+	return uv;
+}
+
 void main() {
     v_uv = in_uv;
-    vec2 world_pos = in_vertex_pos + u_position;
+    vec2 world_pos = rotate((in_vertex_pos + u_position) * u_scale, u_rot_rad);
     gl_Position = u_proj_view * vec4(world_pos, 0.0, 1.0);
 }
     """
@@ -56,11 +72,15 @@ void main() {
         self.vao = ctx.vertex_array(self.program, [(self.vbo, format, *attribute_names)], index_buffer=self.ibo)
 
         self.position = glm.vec2(0, 0)
+        self.scale = 1.0
+        self.rotation_radians = 0.0
         self.instances = -1
 
     def render(self, camera: skittle.render.Camera, mode: int = moderngl.TRIANGLES):
         self.uniform('u_proj_view', camera.proj_view_mat().to_bytes())
         self.uniform('u_position', (self.position.x, self.position.y))
+        self.uniform('u_scale', self.scale)
+        self.uniform('u_rot_rad', self.rotation_radians)
         self.vao.render(mode, instances=self.instances)
 
     def release(self):
@@ -99,8 +119,8 @@ void main() {
 
 
 class TextureMesh(Mesh):
-    def __init__(self, ctx: moderngl.Context, width: int, height: int, u0: float, v0: float, u1: float, v1: float, texture: pygame.Surface, vertex: str = Mesh.VERTEX, fragment: str = Mesh.FRAGMENT) -> None:
-        vertices, indices = Mesh.uv_quad(width, height, u0, v0, u1, v1)
+    def __init__(self, ctx: moderngl.Context, w: int, h: int, u0: float, v0: float, u1: float, v1: float, texture: pygame.Surface, vertex: str = Mesh.VERTEX, fragment: str = Mesh.FRAGMENT) -> None:
+        vertices, indices = Mesh.uv_quad(w, h, u0, v0, u1, v1)
         
         super().__init__(
             ctx, 
@@ -109,10 +129,7 @@ class TextureMesh(Mesh):
             vertex=vertex,
             fragment=fragment
         )
-
-        self._width = width
-        self._height = height
-
+        
         self.texture: moderngl.Texture
         self.load_texture(texture) 
 
@@ -131,15 +148,15 @@ class TextureMesh(Mesh):
         self.texture.release()
 
 class SpriteQuad(TextureMesh):
-    def __init__(self, ctx: moderngl.Context, width: int, height: int, texture: pygame.Surface, vertex: str = Mesh.VERTEX, fragment: str = Mesh.FRAGMENT) -> None:
-        super().__init__(ctx, width, height, 0, 0, 1, 1, texture, vertex, fragment)
+    def __init__(self, ctx: moderngl.Context, texture: pygame.Surface, vertex: str = Mesh.VERTEX, fragment: str = Mesh.FRAGMENT) -> None:
+        super().__init__(ctx, texture.width, texture.height, 0, 0, 1, 1, texture, vertex, fragment)
 
 class SpritesheetQuad(TextureMesh):
-    def __init__(self, ctx: moderngl.Context, width: int, height: int, spritesheet: skittle.resource.Spritesheet, vertex: str = Mesh.VERTEX, fragment: str = Mesh.FRAGMENT) -> None:
+    def __init__(self, ctx: moderngl.Context, spritesheet: skittle.resource.Spritesheet, vertex: str = Mesh.VERTEX, fragment: str = Mesh.FRAGMENT) -> None:
         self.frame = (0, 0)
         u0, v0, u1, v1 = spritesheet.uv(0, 0)
 
-        super().__init__(ctx, width, height, u0, v0, u1, v1, spritesheet.surface, vertex, fragment)
+        super().__init__(ctx, spritesheet.sprite_w, spritesheet.sprite_h, u0, v0, u1, v1, spritesheet.surface, vertex, fragment)
 
         self.spritesheet = spritesheet
 
@@ -147,7 +164,7 @@ class SpritesheetQuad(TextureMesh):
         if frame == self.frame:
             return
         u0, v0, u1, v1 = self.spritesheet.uv(*frame)
-        vertices, _ = Mesh.uv_quad(self._width, self._height, u0, v0, u1, v1)
+        vertices, _ = Mesh.uv_quad(self.spritesheet.sprite_w, self.spritesheet.sprite_h, u0, v0, u1, v1)
         self.vbo.write(numpy.array(vertices, dtype='f4').tobytes())
         self.frame = frame
 
@@ -164,12 +181,13 @@ in vec2 in_tile_uv_scale;
 
 uniform mat4 u_proj_view;
 uniform vec2 u_position;
+uniform float u_scale;
 
 out vec2 v_uv;
 
 void main() {
     v_uv = in_uv * in_tile_uv_scale + in_tile_uv_offset;
-    vec2 world_pos = in_vertex_pos + u_position + in_tile_pos;
+    vec2 world_pos = (in_vertex_pos + u_position + in_tile_pos) * u_scale;
     gl_Position = u_proj_view * vec4(world_pos, 0.0, 1.0);
 }
     """
@@ -177,8 +195,8 @@ void main() {
     type _InstanceData = tuple[float, float, int, int] # pos x, pos y, ss cell x, ss cell y
         
 
-    def __init__(self, ctx: moderngl.Context, width: int, height: int, spritesheet: skittle.resource.Spritesheet, vertex: str = PER_INSTANCE_VERTEX, fragment: str = Mesh.FRAGMENT) -> None:
-        super().__init__(ctx, width, height, 0, 0, 1, 1, spritesheet.surface, vertex, fragment)
+    def __init__(self, ctx: moderngl.Context, spritesheet: skittle.resource.Spritesheet, vertex: str = PER_INSTANCE_VERTEX, fragment: str = Mesh.FRAGMENT) -> None:
+        super().__init__(ctx, spritesheet.sprite_w, spritesheet.sprite_h, 0, 0, 1, 1, spritesheet.surface, vertex, fragment)
         self.spritesheet = spritesheet
 
         # need to remake the vao

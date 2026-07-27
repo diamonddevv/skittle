@@ -10,7 +10,7 @@ class Test_TexturedQuad(skittle.render.Window):
         super().__init__("textured quad", 500, 500, fps_in_title=True)
         
         self.img = skittle.resource.image("tests/asset/scotland.png")
-        self.quad = skittle.render.SpriteQuad(self.mgl_ctx, 64, 64, self.img)
+        self.quad = skittle.render.SpriteQuad(self.mgl_ctx, self.img)
 
         self.panning = False
         self.last_mouse_pos = glm.vec2()

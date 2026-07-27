@@ -11,7 +11,7 @@ class Test_Instanced(skittle.render.Window):
         super().__init__("spritesheet", 500, 500, target_fps=0, fps_in_title=True)
         
         self.spritesheet = skittle.resource.spritesheet("tests/asset/spritesheet.png")
-        self.map = skittle.render.MultiInstanceSpritesheetQuad(self.mgl_ctx, 64, 64, self.spritesheet)
+        self.map = skittle.render.MultiInstanceSpritesheetQuad(self.mgl_ctx, self.spritesheet)
 
         self.panning = False
         self.last_mouse_pos = glm.vec2()
@@ -19,8 +19,7 @@ class Test_Instanced(skittle.render.Window):
         self.sprite_idx_x = 0
         self.sprite_idx_y = 0
 
-        self.map.bake_instances([(x * 64, y * 64, random.randint(0, 2), random.randint(0, 7)) for x in range(500) for y in range(250)])
-        50
+        self.map.bake_instances([(x * 16, y * 16, random.randint(0, 2), random.randint(0, 7)) for x in range(500) for y in range(250)])
 
     def draw(self, ctx: moderngl.Context, camera: skittle.render.Camera):
         self.mgl_ctx.clear(1,1,1)
