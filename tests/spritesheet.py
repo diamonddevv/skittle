@@ -6,7 +6,7 @@ import moderngl
 import pygame
 import skittle
 
-class Test_Spritesheet(skittle.render.Window):
+class test_Spritesheet(skittle.render.Window):
     def __init__(self) -> None:
         super().__init__("spritesheet", 500, 500, fps_in_title=True)
         
@@ -72,7 +72,7 @@ class Test_Spritesheet(skittle.render.Window):
                 self.last_mouse_pos = current_pos
 
 if __name__ == "__main__":
-    wnd = Test_Spritesheet()
+    wnd = test_Spritesheet()
 
     skittle.bind_pygame_event_handler(wnd.handle_zoom, pygame.MOUSEWHEEL)
     skittle.bind_pygame_event_handler(wnd.handle_pan, pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION)

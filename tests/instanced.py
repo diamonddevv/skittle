@@ -6,7 +6,7 @@ import pygame
 import skittle
 import random
 
-class Test_Instanced(skittle.render.Window):
+class test_Instanced(skittle.render.Window):
     def __init__(self) -> None:
         super().__init__("spritesheet", 500, 500, target_fps=0, fps_in_title=True)
         
@@ -47,7 +47,7 @@ class Test_Instanced(skittle.render.Window):
                 self.last_mouse_pos = current_pos
 
 if __name__ == "__main__":
-    wnd = Test_Instanced()
+    wnd = test_Instanced()
 
     skittle.bind_pygame_event_handler(wnd.handle_zoom, pygame.MOUSEWHEEL)
     skittle.bind_pygame_event_handler(wnd.handle_pan, pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION)

@@ -17,6 +17,9 @@ __VERSION__: str = "0.0.0"
 __GLSL_MAJOR__: int = 3
 __GLSL_MINOR__: int = 3
 
+_PROGRAM_DEV_DIRECTORY: str = ""
+_PROGRAM_APP_DIRECTORY: str = ""
+
 type _PygameEventHandler = typing.Callable[[pygame.Event], typing.Any]
 _PYGAME_EVENT_HANDLERS: dict[int, list[_PygameEventHandler]] = {}
 

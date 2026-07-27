@@ -4,20 +4,29 @@ from pyglm import glm
 import moderngl
 import pygame
 import skittle
+import random
 
-class test_TexturedQuad(skittle.render.Window):
+class test_Tileset(skittle.render.Window):
     def __init__(self) -> None:
-        super().__init__("textured quad", 500, 500, fps_in_title=True)
+        super().__init__("spritesheet", 500, 500, target_fps=0, fps_in_title=True)
         
-        self.img = skittle.resource.image("tests/asset/scotland.png")
-        self.quad = skittle.render.SpriteQuad(self.mgl_ctx, self.img)
+        self.spritesheet = skittle.resource.spritesheet("tests/asset/tileset.png")
+        self.map_render = skittle.render.MultiInstanceSpritesheetQuad(self.mgl_ctx, self.spritesheet)
+
+        self.tilemap = skittle.resource.Tilemap()
 
         self.panning = False
         self.last_mouse_pos = glm.vec2()
 
+        self.sprite_idx_x = 0
+        self.sprite_idx_y = 0
+
+        
+        self.map_render.bake_instances(self.tilemap.bake_instanced_render())
+
     def draw(self, ctx: moderngl.Context, camera: skittle.render.Camera):
         self.mgl_ctx.clear(1,1,1)
-        self.quad.render(camera)
+        self.map_render.render(camera)
 
     def handle_zoom(self, event: pygame.Event):
         if event.y == 0:
@@ -41,7 +50,7 @@ class test_TexturedQuad(skittle.render.Window):
                 self.last_mouse_pos = current_pos
 
 if __name__ == "__main__":
-    wnd = test_TexturedQuad()
+    wnd = test_Tileset()
 
     skittle.bind_pygame_event_handler(wnd.handle_zoom, pygame.MOUSEWHEEL)
     skittle.bind_pygame_event_handler(wnd.handle_pan, pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION)

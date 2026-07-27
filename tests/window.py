@@ -31,7 +31,7 @@ void main() {
 
 
 
-class Test_Window(skittle.render.Window):
+class test_Window(skittle.render.Window):
     def __init__(self) -> None:
         super().__init__("hello, world!", 500, 500)
 
@@ -64,5 +64,5 @@ class Test_Window(skittle.render.Window):
 if __name__ == "__main__":
     skittle.init()
 
-    wnd = Test_Window()
+    wnd = test_Window()
     wnd.run()
