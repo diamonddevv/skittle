@@ -9,6 +9,7 @@ import pygame
 import colorama
 import typing
 
+from skittle import math
 from skittle import render
 from skittle import resource
 
@@ -28,7 +29,7 @@ def log(msg: str):
     print(colorama.Fore.CYAN + "[skittle] " + colorama.Fore.RESET + msg)
 
 def err(msg: str):
-    print(colorama.Fore.RED + "[ERROR] " + colorama.Fore.RESET + msg)
+    print(colorama.Fore.RED + "[error] " + colorama.Fore.RESET + msg)
 
 def bind_pygame_event_handler(handler: _PygameEventHandler, *event_type: int):
     for e in event_type:

@@ -3,7 +3,6 @@ import os
 import skittle
 
 from skittle.resource.spritesheet import *
-from skittle.resource.tilemap import *
 
 
 

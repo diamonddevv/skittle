@@ -16,6 +16,7 @@ in vec2 in_uv;
 
 uniform mat4 u_proj_view;
 uniform vec2 u_position;
+uniform float u_layer;
 uniform float u_scale;
 uniform float u_rot_rad;
 
@@ -38,7 +39,7 @@ vec2 rotate(vec2 uv, float angle)
 void main() {
     v_uv = in_uv;
     vec2 world_pos = rotate((in_vertex_pos + u_position) * u_scale, u_rot_rad);
-    gl_Position = u_proj_view * vec4(world_pos, 0.0, 1.0);
+    gl_Position = u_proj_view * vec4(world_pos, u_layer, 1.0);
 }
     """
         
@@ -64,40 +65,43 @@ void main() {
                  vertex: str = VERTEX,
                  fragment: str = FRAGMENT,
                  ) -> None:
-        self.ctx = ctx
-        self.program = ctx.program(vertex, fragment)
+        self._ctx = ctx
+        self._program = ctx.program(vertex, fragment)
 
-        self.vbo = ctx.buffer(numpy.array(vertices, dtype='f4').tobytes())
-        self.ibo = ctx.buffer(numpy.array(indices, dtype='i4').tobytes()) if indices != None else None
-        self.vao = ctx.vertex_array(self.program, [(self.vbo, format, *attribute_names)], index_buffer=self.ibo)
+        self._vbo = ctx.buffer(numpy.array(vertices, dtype='f4').tobytes())
+        self._ibo = ctx.buffer(numpy.array(indices, dtype='i4').tobytes()) if indices != None else None
+        self._vao = ctx.vertex_array(self._program, [(self._vbo, format, *attribute_names)], index_buffer=self._ibo)
+        self._instances = -1
+        self._layers = 999
 
         self.position = glm.vec2(0, 0)
-        self.scale = 1.0
-        self.rotation_radians = 0.0
-        self.instances = -1
+        self.scale: float = 1.0
+        self.layer: int = 0
+        self.rotation_radians: float = 0.0
 
-    def render(self, camera: skittle.render.Camera, mode: int = moderngl.TRIANGLES):
-        self.uniform('u_proj_view', camera.proj_view_mat().to_bytes())
+    def render(self, camera: skittle.render.Camera, overlay: bool = False, mode: int = moderngl.TRIANGLES):
+        self.uniform('u_proj_view', camera.proj_view_mat(overlay).to_bytes())
         self.uniform('u_position', (self.position.x, self.position.y))
         self.uniform('u_scale', self.scale)
+        self.uniform('u_layer', skittle.math.clamp(self.layer, -self._layers, self._layers) / self._layers)
         self.uniform('u_rot_rad', self.rotation_radians)
-        self.vao.render(mode, instances=self.instances)
+        self._vao.render(mode, instances=self._instances)
 
     def release(self):
-        self.vbo.release()
-        if self.ibo != None:
-            self.ibo.release()
-        self.vao.release()
+        self._vbo.release()
+        if self._ibo != None:
+            self._ibo.release()
+        self._vao.release()
 
     def uniform(self, key: str, value):
-        if key in self.program:
+        if key in self._program:
             if type(value) == bytes:
-                self.program[key].write(value) # type: ignore
+                self._program[key].write(value) # type: ignore
             else:
-                self.program[key].value = value # type: ignore
+                self._program[key].value = value # type: ignore
 
     def read_uniform(self, key: str):
-        return self.program[key]
+        return self._program[key]
 
     @staticmethod
     def uv_quad(width: int, height: int, u0: float = 0.0, v0: float = 0.0, u1: float = 1.0, v1: float = 1.0) -> tuple[list[float], list[int]]:
@@ -105,7 +109,7 @@ void main() {
         hh = height / 2
 
         vertices = [
-                    -hw,  hh, u0, v0,  # top left
+                    -hw,  hh, u0, v0, # top left
                      hw,  hh, u1, v0, # top right
                      hw, -hh, u1, v1, # bottom right
                     -hw, -hh, u0, v1, # bottom left
@@ -135,13 +139,13 @@ class TextureMesh(Mesh):
 
     def load_texture(self, surface: pygame.Surface, filter: int = moderngl.NEAREST):
         data = pygame.image.tobytes(surface, "RGBA")
-        self.texture = self.ctx.texture(surface.get_size(), 4, data)
+        self.texture = self._ctx.texture(surface.get_size(), 4, data)
         self.texture.filter = (filter, filter)
     
-    def render(self, camera: skittle.render.Camera, mode: int = moderngl.TRIANGLES):
+    def render(self, camera: skittle.render.Camera, overlay: bool = False, mode: int = moderngl.TRIANGLES):
         self.texture.use(0)
         self.uniform('u_texture', 0)
-        return super().render(camera, mode)
+        return super().render(camera, overlay, mode)
     
     def release(self):
         super().release()
@@ -165,7 +169,7 @@ class SpritesheetQuad(TextureMesh):
             return
         u0, v0, u1, v1 = self.spritesheet.uv(*frame)
         vertices, _ = Mesh.uv_quad(self.spritesheet.sprite_w, self.spritesheet.sprite_h, u0, v0, u1, v1)
-        self.vbo.write(numpy.array(vertices, dtype='f4').tobytes())
+        self._vbo.write(numpy.array(vertices, dtype='f4').tobytes())
         self.frame = frame
 
 class MultiInstanceSpritesheetQuad(TextureMesh):
@@ -182,13 +186,14 @@ in vec2 in_tile_uv_scale;
 uniform mat4 u_proj_view;
 uniform vec2 u_position;
 uniform float u_scale;
+uniform float u_layer;
 
 out vec2 v_uv;
 
 void main() {
     v_uv = in_uv * in_tile_uv_scale + in_tile_uv_offset;
     vec2 world_pos = (in_vertex_pos + u_position + in_tile_pos) * u_scale;
-    gl_Position = u_proj_view * vec4(world_pos, 0.0, 1.0);
+    gl_Position = u_proj_view * vec4(world_pos, u_layer, 1.0);
 }
     """
 
@@ -200,7 +205,7 @@ void main() {
         self.spritesheet = spritesheet
 
         # need to remake the vao
-        self.vao.release()
+        self._vao.release()
 
         # make new vbo and instanced vao
         self.rebuild_vao_vbo(500)
@@ -208,13 +213,13 @@ void main() {
     def rebuild_vao_vbo(self, reserve: int = 500):
         instance_size = 6*4
 
-        self.instance_vbo = self.ctx.buffer(reserve=instance_size * reserve, dynamic=True)
-        self.instances = 0
+        self.instance_vbo = self._ctx.buffer(reserve=instance_size * reserve, dynamic=True)
+        self._instances = 0
 
-        self.vao = self.ctx.vertex_array(self.program, [
-            (self.vbo, "2f 2f", 'in_vertex_pos', 'in_uv'),
+        self._vao = self._ctx.vertex_array(self._program, [
+            (self._vbo, "2f 2f", 'in_vertex_pos', 'in_uv'),
             (self.instance_vbo, "2f 2f 2f /i", "in_tile_pos", "in_tile_uv_offset", "in_tile_uv_scale")
-        ], index_buffer=self.ibo)
+        ], index_buffer=self._ibo)
 
     def bake_instances(self, instances: list[_InstanceData]):
         data = []
@@ -227,12 +232,12 @@ void main() {
                 u1-u0, v1-v0
             ])
 
-        if len(instances) > self.instances:
+        if len(instances) > self._instances:
             self.rebuild_vao_vbo(len(instances))
         
         self.instance_vbo.write(numpy.array(data, dtype='f4').tobytes())
-        self.instances = len(instances)
+        self._instances = len(instances)
 
-    def render(self, camera: Camera, mode: int = moderngl.TRIANGLES):
-        if self.instances > 0:
-            return super().render(camera, mode)
+    def render(self, camera: Camera, overlay: bool = False, mode: int = moderngl.TRIANGLES):
+        if self._instances > 0:
+            return super().render(camera, overlay, mode)
