@@ -33,9 +33,9 @@ void main() {
 
 class test_Window(skittle.render.Window):
     def __init__(self) -> None:
-        super().__init__("hello, world!", 500, 500)
+        super().__init__(None, "hello, world!", 500, 500)
 
-        self.program = self.mgl_ctx.program(vrtx, frag)
+        self.program = self.ctx.program(vrtx, frag)
         vertices = numpy.array([
             # x,     y,     r,   g,   b
             0.0,   0.8,   1.0, 0.0, 0.0,
@@ -43,9 +43,9 @@ class test_Window(skittle.render.Window):
             0.8,  -0.8,   0.0, 0.0, 1.0,
         ], dtype='f4')
 
-        vbo = self.mgl_ctx.buffer(vertices.tobytes())
+        vbo = self.ctx.buffer(vertices.tobytes())
 
-        self.vao = self.mgl_ctx.vertex_array(
+        self.vao = self.ctx.vertex_array(
             self.program,
             [
                 (vbo, '2f 3f', 'in_position', 'in_color'),

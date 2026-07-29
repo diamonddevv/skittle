@@ -7,6 +7,7 @@ import skittle
 class Window():
 
     def __init__(self, 
+                 initial_scene: skittle.scene.SceneSwitch | None,
                  title: str = "skittle engine", 
                  width: int = 1280, height: int = 720,
 
@@ -23,11 +24,14 @@ class Window():
         self._window_surface = pygame.display.set_mode((width, height), pygame.RESIZABLE | pygame.OPENGL | pygame.DOUBLEBUF)
         self._clock = pygame.Clock()
 
-        self.mgl_ctx = moderngl.create_context()
+        self.ctx = moderngl.create_context()
         pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MAJOR_VERSION, skittle.__GLSL_MAJOR__)
         pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MINOR_VERSION, skittle.__GLSL_MINOR__)
-        self.mgl_ctx.enable(moderngl.BLEND)
+        self.ctx.enable(moderngl.BLEND)
+
+
         self.camera = skittle.render.Camera(width, height)
+        self.scene_manager = skittle.scene.SceneManager(self.ctx, self.camera, initial_scene)
 
         if icon_path != "":
             image = pygame.image.load(icon_path).convert_alpha()
@@ -41,8 +45,8 @@ class Window():
             self.event_handle()
             self.update(dt)
 
-            self.mgl_ctx.clear(0,0,0)
-            self.draw(self.mgl_ctx, self.camera)
+            self.ctx.clear(0,0,0)
+            self.draw(self.ctx, self.camera)
             pygame.display.flip()
 
             if self._fps_in_title:
@@ -52,23 +56,26 @@ class Window():
             dt = self._clock.tick(self.target_fps) / 1000
 
     def update(self, dt: float):
-        pass
+        self.scene_manager.update(dt)
 
     def draw(self, ctx: moderngl.Context, camera: skittle.render.Camera):
-        pass
+        self.scene_manager.draw(ctx, camera)
 
     def event_handle(self):
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 self.close()
             if e.type == pygame.VIDEORESIZE:
-                self.mgl_ctx.viewport = (0, 0, e.w, e.h)
+                self.ctx.viewport = (0, 0, e.w, e.h)
                 self.camera.resize(e.w, e.h)
 
             # event handlers
-            if e.type in skittle._PYGAME_EVENT_HANDLERS:
-                for callback in skittle._PYGAME_EVENT_HANDLERS[e.type]:
+            if e.type in skittle._EventHandler._PYGAME_EVENT_HANDLERS:
+                for callback in skittle._EventHandler._PYGAME_EVENT_HANDLERS[e.type]:
                     callback(e)
 
     def close(self):
         self._running = False
+
+    def switch_scene(self, scene: skittle.scene.SceneSwitch):
+        self.scene_manager.switch(scene)

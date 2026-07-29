@@ -1,8 +1,10 @@
 from pyglm import glm
 import moderngl
+import typing
 import skittle
+import json
 
-class PixelFontRenderer():
+class TextRenderer():
     def __init__(
             self,
             ctx: moderngl.Context,
@@ -101,8 +103,8 @@ class PixelFontRenderer():
                 cx, cy = self.get_codepoint_pos(char)
                 width = self.get_character_width(char)
                 inst_data.append((
-                    width_pos,
-                    -line * self.spritesheet.sprite_h,
+                    width_pos + self.spritesheet.sprite_w / 2,
+                    -line * self.spritesheet.sprite_h - self.spritesheet.sprite_h / 2,
                     cx, cy
                 ))
                 width_pos += width
@@ -118,4 +120,26 @@ class PixelFontRenderer():
     def release(self):
         self.mesh.release()
 
+
+    @staticmethod
+    def from_json(ctx: moderngl.Context, json_path: str) -> TextRenderer:
+        import os
+        with open(json_path, "rb") as f:
+            obj: dict[str, typing.Any] = json.load(f)
         
+        return TextRenderer(
+            ctx, 
+            skittle.resource.spritesheet(
+                obj["spritesheet_path"], 
+                sprite_w=obj.get("sprite_width", 16),
+                sprite_h=obj.get("sprite_height", 16),
+                sep_x=obj.get("seperation_x", 0),
+                sep_y=obj.get("seperation_y", 0),
+                ),
+                ''.join(obj["glyphs"]),
+                obj["rows"],
+                obj["columns"],
+                obj.get("caps_only", False),
+                obj.get("default_glyph_width", 0),
+                obj.get("glyph_widths", {}),
+            )

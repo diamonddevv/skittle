@@ -6,6 +6,8 @@ from skittle.resource.spritesheet import *
 
 
 
+
+
 def image(path: str) -> pygame.Surface:
     return pygame.image.load(path).convert_alpha()
 
@@ -16,15 +18,19 @@ def spritesheet(path: str, sprite_w: int = 16, sprite_h: int = 16, sep_x: int = 
 
 # # # #
 
+class _ResourceData():
+    _PROGRAM_DEV_DIRECTORY: str = ""
+    _PROGRAM_APP_DIRECTORY: str = ""
+
 def set_program_directories(dev: str, app: str):
-    skittle._PROGRAM_DEV_DIRECTORY = dev
-    skittle._PROGRAM_APP_DIRECTORY = app
+    skittle.resource._ResourceData._PROGRAM_DEV_DIRECTORY = dev
+    skittle.resource._ResourceData._PROGRAM_APP_DIRECTORY = app
 
 def get_program_path(plus: str = "") -> str:
-    if skittle._PROGRAM_DEV_DIRECTORY == "" or skittle._PROGRAM_APP_DIRECTORY == "":
+    if skittle.resource._ResourceData._PROGRAM_DEV_DIRECTORY == "" or skittle.resource._ResourceData._PROGRAM_APP_DIRECTORY == "":
         raise ValueError("attempted to access program path when program dev directory or app directory names have not been set! (you may have forgotten to call set_program_directories)")
 
-    path = pygame.system.get_pref_path(org=skittle._PROGRAM_DEV_DIRECTORY, app=skittle._PROGRAM_APP_DIRECTORY)
+    path = pygame.system.get_pref_path(org=skittle.resource._ResourceData._PROGRAM_DEV_DIRECTORY, app=skittle.resource._ResourceData._PROGRAM_APP_DIRECTORY)
     if path == "":
         return path
     else:

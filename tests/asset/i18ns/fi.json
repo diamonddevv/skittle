@@ -1,0 +1,9 @@
+{
+    "lang.endonym": "Suomi",
+    "lang.exonym": "Finnish",
+
+    "scene.template": "Moi! Tämä vaiheen nimi on: '{}'",
+    "scene.1": "Ensimmäinen",
+    "scene.2": "Ei ensimmäinen",
+    "scene.3": "Viimeinen"
+}

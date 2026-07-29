@@ -1,0 +1,9 @@
+{
+    "lang.endonym": "English",
+    "lang.exonym": "English",
+
+    "scene.template": "Hello! This scene is called: '{}'",
+    "scene.0": "The first one",
+    "scene.2": "Not the first one",
+    "scene.3": "The last one"
+}

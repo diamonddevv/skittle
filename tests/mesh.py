@@ -7,16 +7,16 @@ import skittle
 
 class test_TexturedQuad(skittle.render.Window):
     def __init__(self) -> None:
-        super().__init__("textured quad", 500, 500, fps_in_title=True)
+        super().__init__(None, "textured quad", 500, 500, fps_in_title=True)
         
         self.img = skittle.resource.image("tests/asset/scotland.png")
-        self.quad = skittle.render.SpriteQuad(self.mgl_ctx, self.img)
+        self.quad = skittle.render.SpriteQuad(self.ctx, self.img)
 
         self.panning = False
         self.last_mouse_pos = glm.vec2()
 
     def draw(self, ctx: moderngl.Context, camera: skittle.render.Camera):
-        self.mgl_ctx.clear(1,1,1)
+        self.ctx.clear(1,1,1)
         self.quad.render(camera)
 
     def handle_zoom(self, event: pygame.Event):

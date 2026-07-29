@@ -1,0 +1,9 @@
+{
+    "lang.endonym": "Deutsch",
+    "lang.exonym": "German",
+
+    "scene.template": "Hallo! Das Stufe heißt: '{}'",
+    "scene.1": "Erste",
+    "scene.2": "Nicht erste",
+    "scene.3": "Letzte"
+}

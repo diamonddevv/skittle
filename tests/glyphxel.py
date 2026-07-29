@@ -7,11 +7,11 @@ import skittle
 
 class test_Text(skittle.render.Window):
     def __init__(self) -> None:
-        super().__init__("textured quad", 500, 500, fps_in_title=True)
+        super().__init__(None, "textured quad", 500, 500, fps_in_title=True)
         
         self.spritesheet = skittle.resource.spritesheet("tests/asset/glyphxel.png")
-        self.font = skittle.render.PixelFontRenderer(
-            self.mgl_ctx,
+        self.font = skittle.render.TextRenderer(
+            self.ctx,
             self.spritesheet,
             "ABCDEFGHIJKLMNOP" +
             "QRSTUVWXYZ ,.!?|" +
@@ -26,27 +26,31 @@ class test_Text(skittle.render.Window):
                 'a': 7,
                 'i': 5,
                 'l': 6,
+                't': 5,
                 '.': 4,
                 ',': 4,
                 "'": 4,
+                ':': 4,
+                ';': 4,
             })
 
         self.img = skittle.resource.image("tests/asset/scotland.png")
-        self.quad = skittle.render.SpriteQuad(self.mgl_ctx, self.img)
+        self.quad = skittle.render.SpriteQuad(self.ctx, self.img)
 
         self.panning = False
         self.last_mouse_pos = glm.vec2()
 
 
     def draw(self, ctx: moderngl.Context, camera: skittle.render.Camera):
-        self.mgl_ctx.clear(0,0,0)
+        self.ctx.clear(0,0,0)
 
         self.quad.render(camera)
         self.font.render(camera, 
-                         "nopeaa teksti renderimaan varten,\n" \
-                            "vastaus on vbo-rebaking!\n\n" \
-                                "ja se ei liiku", 
-                         pos=glm.vec2(8, -8), overlay=True)
+                         "nopean tekstin renderimaan varten,\n" +
+                         "vastaus on vbo-rebaking!\n\n" +
+                         "ja se ei liiku :)\n\n\n" +
+                         "this is a list: alpha, beta, gamma sekä delta", 
+                         pos=glm.vec2(0), overlay=True)
 
     def handle_zoom(self, event: pygame.Event):
             if event.y == 0:

@@ -81,7 +81,7 @@ void main() {
 
     def render(self, camera: skittle.render.Camera, overlay: bool = False, mode: int = moderngl.TRIANGLES):
         self.uniform('u_proj_view', camera.proj_view_mat(overlay).to_bytes())
-        self.uniform('u_position', (self.position.x, self.position.y))
+        self.uniform('u_position', (self.position.x, -self.position.y))
         self.uniform('u_scale', self.scale)
         self.uniform('u_layer', skittle.math.clamp(self.layer, -self._layers, self._layers) / self._layers)
         self.uniform('u_rot_rad', self.rotation_radians)

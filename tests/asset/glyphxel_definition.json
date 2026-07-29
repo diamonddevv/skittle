@@ -1,0 +1,34 @@
+{
+    "spritesheet_path": "tests/asset/glyphxel.png",
+    "sprite_w": 16,
+    "sprite_h": 16,
+    "seperation_x": 0,
+    "seperation_y": 0,
+
+    "glyphs": [
+        "ABCDEFGHIJKLMNOP",
+        "QRSTUVWXYZ ,.!?|",
+        "abcdefghijklmnop",
+        "qrstuvwxyz£¢$€\"'",
+        "0123456789=-+*/\\",
+        "ÄÅÖÕÜŽŠẞ        ",
+        "äåöõüžšß        ",
+        "()<>[]{}:;^%&_  "
+    ],
+    "rows": 16,
+    "columns": 16,
+    "caps_only": false,
+    "default_glyph_width": 8,
+    "glyph_widths": {
+        "a": 7,
+        "i": 5,
+        "l": 6,
+        "t": 5,
+        ".": 4,
+        ",": 4,
+        "\"": 4,
+        "'": 4,
+        ":": 4,
+        ";": 4
+    }
+}
