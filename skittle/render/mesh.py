@@ -1,6 +1,5 @@
 from moderngl import TRIANGLES
 import pygame
-import numpy
 import moderngl
 import skittle
 from pyglm import glm
@@ -49,6 +48,7 @@ void main() {
 in vec2 v_uv;
 out vec4 fragColor;
 
+uniform vec4 u_tint;
 uniform sampler2D u_texture;
 
 void main() {
@@ -64,18 +64,22 @@ void main() {
                  indices: list[int] | None = None,
                  vertex: str = VERTEX,
                  fragment: str = FRAGMENT,
+                 build_vao: bool = True,
                  ) -> None:
         self._ctx = ctx
         self._program = ctx.program(vertex, fragment)
 
-        self._vbo = ctx.buffer(numpy.array(vertices, dtype='f4').tobytes())
-        self._ibo = ctx.buffer(numpy.array(indices, dtype='i4').tobytes()) if indices != None else None
-        self._vao = ctx.vertex_array(self._program, [(self._vbo, format, *attribute_names)], index_buffer=self._ibo)
+        if build_vao:
+            self._vbo = ctx.buffer(glm.array.from_numbers(glm.float32, *vertices).to_bytes())
+            self._ibo = ctx.buffer(glm.array.from_numbers(glm.int32, *indices).to_bytes()) if indices != None else None
+            self._vao = ctx.vertex_array(self._program, [(self._vbo, format, *attribute_names)], index_buffer=self._ibo)
+        
         self._instances = -1
         self._layers = 999
 
         self.position = glm.vec2(0, 0)
         self.scale: float = 1.0
+        self.color = skittle.Color(255, 255, 255)
         self.layer: int = 0
         self.rotation_radians: float = 0.0
 
@@ -83,6 +87,7 @@ void main() {
         self.uniform('u_proj_view', camera.proj_view_mat(overlay).to_bytes())
         self.uniform('u_position', (self.position.x, -self.position.y))
         self.uniform('u_scale', self.scale)
+        self.uniform('u_tint', (self.color.r, self.color.g, self.color.b, self.color.a))
         self.uniform('u_layer', skittle.math.clamp(self.layer, -self._layers, self._layers) / self._layers)
         self.uniform('u_rot_rad', self.rotation_radians)
         self._vao.render(mode, instances=self._instances)
@@ -169,7 +174,7 @@ class SpritesheetQuad(TextureMesh):
             return
         u0, v0, u1, v1 = self.spritesheet.uv(*frame)
         vertices, _ = Mesh.uv_quad(self.spritesheet.sprite_w, self.spritesheet.sprite_h, u0, v0, u1, v1)
-        self._vbo.write(numpy.array(vertices, dtype='f4').tobytes())
+        self._vbo.write(glm.array.from_numbers(glm.int32, *vertices).to_bytes())
         self.frame = frame
 
 class MultiInstanceSpritesheetQuad(TextureMesh):
@@ -208,9 +213,9 @@ void main() {
         self._vao.release()
 
         # make new vbo and instanced vao
-        self.rebuild_vao_vbo(500)
+        self.build_vao_vbo(500)
 
-    def rebuild_vao_vbo(self, reserve: int = 500):
+    def build_vao_vbo(self, reserve: int = 500):
         instance_size = 6*4
 
         self.instance_vbo = self._ctx.buffer(reserve=instance_size * reserve, dynamic=True)
@@ -233,9 +238,9 @@ void main() {
             ])
 
         if len(instances) > self._instances:
-            self.rebuild_vao_vbo(len(instances))
+            self.build_vao_vbo(len(instances))
         
-        self.instance_vbo.write(numpy.array(data, dtype='f4').tobytes())
+        self.instance_vbo.write(glm.array.from_numbers(glm.float32, *data).to_bytes())
         self._instances = len(instances)
 
     def render(self, camera: Camera, overlay: bool = False, mode: int = moderngl.TRIANGLES):

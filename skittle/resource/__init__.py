@@ -14,6 +14,11 @@ def image(path: str) -> pygame.Surface:
 def spritesheet(path: str, sprite_w: int = 16, sprite_h: int = 16, sep_x: int = 0, sep_y: int = 0) -> Spritesheet:
     return Spritesheet(image(path), sprite_w, sprite_h, sep_x, sep_y)
 
+def shader(path: str) -> str:
+    f = open(path, "r")
+    s = f.read()
+    f.close()
+    return s
 
 
 # # # #

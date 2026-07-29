@@ -1,6 +1,4 @@
 import math
-
-
 def clamp(x: int, low: int, high: int) -> int:
     return min(max(x, low), high)
 

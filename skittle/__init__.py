@@ -43,3 +43,12 @@ def bind_pygame_event_handler(handler: _EventHandler._PygameEventHandler, *event
 def init():
     log(f"initialised (v{__VERSION__})")
     pygame.init()
+
+
+# wrappers
+
+class Color(pygame.color.Color):
+    """
+    wrapper around pygame's color.
+    """
+    pass
