@@ -5,34 +5,28 @@ import moderngl
 import skittle
 import pygame
 
-class BlockParticle(skittle.render.ParticleMesh):
-    FRAGMENT: str = """
-#version 330 core
-
-in vec2 v_uv;
-out vec4 fragColor;
-
-uniform vec4 u_tint;
-uniform sampler2D u_texture;
-
-void main() {
-    fragColor = u_tint;
-}
-"""
-
-    def __init__(self, ctx: moderngl.Context) -> None:
-        super().__init__(
-            ctx, skittle.render.Mesh.VERTEX, BlockParticle.FRAGMENT, "", ("", ), 0)
 
 class Scene(skittle.scene.Scene):
     def __init__(self, scene_manager: skittle.scene.SceneManager, ctx: moderngl.Context, camera: skittle.render.Camera) -> None:
         super().__init__(scene_manager, ctx, camera)
 
         self.text_renderer = skittle.render.TextRenderer.from_json(ctx, "tests/asset/glyphxel_definition.json")
-        self.particle = skittle.render.Particle(glm.vec2(0), 3, skittle.Color('red'), 1, 0, 5, 0, BlockParticle(ctx))
+        self.spritesheet = skittle.resource.spritesheet("tests/asset/spritesheet.png")
+        self.particle = skittle.render.ParticleEmitter(
+            glm.vec2(0), 
+            3, 
+            skittle.Color('red'), 
+            32, -glm.pi()/2, 5, 0, 
+            skittle.render.MultiInstanceSpritesheetQuad(
+                ctx, self.spritesheet
+            ), (0, 0))
 
     def draw(self, ctx: moderngl.Context, camera: skittle.render.Camera):
-        pass
+        self.particle.draw(camera)
+
+    def update(self, dt: float):
+        self.particle.emit(variance=1)
+        self.particle.update(dt)
 
 
 class test_Particles(skittle.render.Window):
