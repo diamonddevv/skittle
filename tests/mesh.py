@@ -16,7 +16,7 @@ class test_TexturedQuad(skittle.render.Window):
         self.last_mouse_pos = glm.vec2()
 
     def draw(self, ctx: moderngl.Context, camera: skittle.render.Camera):
-        self.ctx.clear(1,1,1)
+        self.ctx.clear()
         self.quad.render(camera)
 
     def handle_zoom(self, event: pygame.Event):

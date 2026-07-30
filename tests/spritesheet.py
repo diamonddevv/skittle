@@ -47,7 +47,7 @@ class test_Spritesheet(skittle.render.Window):
         
 
     def draw(self, ctx: moderngl.Context, camera: skittle.render.Camera):
-        self.ctx.clear(1,1,1)
+        self.ctx.clear()
         self.quad.render(camera)
 
     def handle_zoom(self, event: pygame.Event):

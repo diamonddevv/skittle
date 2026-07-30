@@ -25,13 +25,14 @@ class Window():
         self._clock = pygame.Clock()
 
         self.ctx = moderngl.create_context()
+        self.ctx.enable(moderngl.BLEND)
         pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MAJOR_VERSION, skittle.__GLSL_MAJOR__)
         pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MINOR_VERSION, skittle.__GLSL_MINOR__)
-        self.ctx.enable(moderngl.BLEND)
+        
 
 
         self.camera = skittle.render.Camera(width, height)
-        self.scene_manager = skittle.scene.SceneManager(self.ctx, self.camera, initial_scene)
+        self.scene_manager = skittle.scene.SceneManager(self.ctx, self.camera, initial_scene, self)
 
         if icon_path != "":
             image = pygame.image.load(icon_path).convert_alpha()
@@ -45,8 +46,11 @@ class Window():
             self.event_handle()
             self.update(dt)
 
-            self.ctx.clear(0,0,0)
+            self.ctx.screen.depth_mask = True
+            self.ctx.clear()
+            self.ctx.screen.depth_mask = False
             self.draw(self.ctx, self.camera)
+            self.camera.finish()
             pygame.display.flip()
 
             if self._fps_in_title:

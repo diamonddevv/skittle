@@ -80,7 +80,7 @@ class TextRenderer():
 
         return (longest_line_width, lines * self.spritesheet.sprite_h)
 
-    def render(self, camera: skittle.render.Camera, text: str, pos: glm.vec2, scale: float = 1, rotation_radians: float = 0, overlay: bool = False):
+    def render(self, camera: skittle.render.Camera, text: str, pos: glm.vec2, scale: float = 1, rotation_radians: float = 0, color: skittle.color.Color = skittle.color.WHITE, overlay: bool = False):
 
         passed, bad_char = self.verify_all_codepoints(text)
         if not passed:
@@ -113,6 +113,7 @@ class TextRenderer():
 
         self.mesh.position = pos
         self.mesh.scale = scale
+        self.mesh.color = color
         self.mesh.rotation_radians = rotation_radians
         self.mesh.render(camera, overlay)
 

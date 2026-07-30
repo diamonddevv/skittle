@@ -42,7 +42,7 @@ class test_Text(skittle.render.Window):
 
 
     def draw(self, ctx: moderngl.Context, camera: skittle.render.Camera):
-        self.ctx.clear(0,0,0)
+        self.ctx.clear()
 
         self.quad.render(camera)
         self.font.render(camera, 

@@ -13,6 +13,7 @@ from skittle import math
 from skittle import scene
 from skittle import observer
 from skittle import i18n
+from skittle import color
 from skittle import tween
 from skittle import render
 from skittle import resource
@@ -44,11 +45,3 @@ def init():
     log(f"initialised (v{__VERSION__})")
     pygame.init()
 
-
-# wrappers
-
-class Color(pygame.color.Color):
-    """
-    wrapper around pygame's color.
-    """
-    pass

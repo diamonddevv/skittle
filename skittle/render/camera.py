@@ -1,6 +1,10 @@
 from pyglm import glm
+import moderngl
+import typing
 
 class Camera():
+    type _PaintersAlgorithmRender = typing.Callable[[Camera, bool, int], typing.Any]
+
     def __init__(self, width: int, height: int, zoom: float = 1.0) -> None:
         self.width = width
         self.height = height
@@ -9,6 +13,8 @@ class Camera():
 
         self.position = glm.vec2(0)
 
+        self._painters_algorithm_layers: dict[int, list[tuple[Camera._PaintersAlgorithmRender, bool, int]]] = {}
+
     def projection(self, overlay: bool):
         half_w = self.width / 2 / (self.zoom if not overlay else 1)
         half_h = self.height / 2 / (self.zoom if not overlay else 1)
@@ -16,7 +22,7 @@ class Camera():
         return glm.ortho(
             -half_w, half_w,
             -half_h, half_h,
-            -1, 0
+            -1, 1
         )
     
     def view_matrix(self, overlay: bool):
@@ -34,6 +40,24 @@ class Camera():
     
     def proj_view_mat(self, overlay: bool = False):
         return self.projection(overlay) * self.view_matrix(overlay)
+    
+
+    def await_completion(self, function: _PaintersAlgorithmRender, overlay: bool, mode: int = moderngl.TRIANGLES, layer: int = 0):
+        """
+        queues an item on a layer for the painters algorithm
+        """
+        l = self._painters_algorithm_layers.get(layer, [])
+        l.append((function, overlay, mode))
+        self._painters_algorithm_layers[layer] = l
+
+    def finish(self):
+        """
+        complete painter's algorithm, easier way of doing depth
+        """
+        for layer in sorted(self._painters_algorithm_layers):
+            for func, overlay, mode in self._painters_algorithm_layers[layer]:
+                func(self, overlay, mode)
+        self._painters_algorithm_layers.clear()
 
 
     def set_position(self, x: float, y: float):

@@ -6,46 +6,60 @@ class ParticleEmitter():
     
 
     def __init__(self,
-                 emission_point: glm.vec2,
-                 size: float,
-                 color: skittle.Color,
-                 speed: float,
-                 direction_rad: float,
-                 ttl: float,
-                 acceleration: float,
+                 emission_point: glm.vec2, 
+                 emission_radius: float, 
+                 colors: list[skittle.Color], 
+                 size_low: float, size_high: float, 
+                 speed_low: float, speed_high: float, 
+                 direction_low: float, direction_high: float, 
+                 ttl_low: float, ttl_high: float,
+                 
                  mesh: skittle.render.MultiInstanceSpritesheetQuad,
-                 sprite_cell: tuple[int, int]
+                 sprite_cell: tuple[int, int],
+
+                 acceleration_low: float = 0, acceleration_high: float = 0,
+                 min_distance: float = 0.0,
+                 scale_rate: float = 1,
+                 max_particles: int = 256
                  ) -> None:
+        
         self.emission_point = emission_point
-        self.size = size
-        self.color = color
-        self.speed = speed
-        self.direction_rad = direction_rad
-        self.ttl = ttl
-        self.acceleration = acceleration
+        self.emission_radius = emission_radius
+        self.colors = colors
+        self.size_low = size_low
+        self.size_high = size_high
+        self.speed_low = speed_low
+        self.speed_high = speed_high
+        self.direction_low = direction_low
+        self.direction_high = direction_high
+        self.ttl_low = ttl_low
+        self.ttl_high = ttl_high
+
+        self.acceleration_low = acceleration_low
+        self.acceleration_high = acceleration_high
+        self.min_distance = min_distance
+        self.scale_rate = scale_rate
 
         self.mesh = mesh
         self.sprite_cell = sprite_cell
+        self.max_particles = max_particles
 
         self._particles: list[ParticleInstance] = []
-        self.max_particles = 256
 
     def draw(self, camera: skittle.render.Camera):
-        self.mesh.color = self.color
-        self.mesh.scale = self.size
-
         idata = [particle.to_instance_data() for particle in self._particles]
         self.mesh.bake_instances(idata)
         self.mesh.render(camera)
 
     def update(self, dt: float):
-        rm = []
+        dead = []
         for particle in self._particles:
             particle.ttl -= dt
 
             if particle.ttl <= 0:
-                rm.append(particle)
+                dead.append(particle)
                 continue
+            
 
             particle.pos += glm.vec2(
                 glm.cos(particle.direction_rad), 
@@ -53,25 +67,33 @@ class ParticleEmitter():
                 ) * particle.speed * dt
 
             particle.speed += particle.acceleration * dt
+        
+        for death in dead:
+            self._particles.remove(death)
 
-        for p in rm:
-            self._particles.remove(p)
-            
-
-    def emit(self, variance: float = 0.05, n: int = 1):
+    def emit(self, n: int = 1):
         for i in range(n):
             if len(self._particles) >= self.max_particles:
                 continue
+
+            position = self.emission_point + skittle.math.radf_to_vec(random.uniform(0, glm.two_pi())) * random.uniform(self.min_distance, self.emission_radius)
+            size = random.uniform(self.size_low, self.size_high)
+            color = random.choice(self.colors)
+            speed = random.uniform(self.speed_low, self.speed_high)
+            direction = random.uniform(self.direction_low, self.direction_high)
+            ttl = random.uniform(self.ttl_low, self.ttl_high)
+            acceleration = random.uniform(self.acceleration_low, self.acceleration_high)
+
             self._particles.append(
                 ParticleInstance(
-                    self.emission_point,
+                    position,
                     self.sprite_cell[0], self.sprite_cell[1],
-                    self.size + random.random() * variance * 2 - variance,
-                    self.color,
-                    self.speed + random.random() * variance * 2 - variance, 
-                    self.direction_rad + random.random() * variance * 2 - variance,
-                    self.ttl,
-                    self.acceleration + random.random() * variance * 2 - variance
+                    size,
+                    color,
+                    speed, 
+                    direction,
+                    ttl,
+                    acceleration
                 )
             )
 

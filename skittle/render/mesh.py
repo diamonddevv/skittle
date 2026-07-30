@@ -15,7 +15,6 @@ in vec2 in_uv;
 
 uniform mat4 u_proj_view;
 uniform vec2 u_position;
-uniform float u_layer;
 uniform float u_scale;
 uniform float u_rot_rad;
 
@@ -38,7 +37,7 @@ vec2 rotate(vec2 uv, float angle)
 void main() {
     v_uv = in_uv;
     vec2 world_pos = rotate((in_vertex_pos + u_position) * u_scale, u_rot_rad);
-    gl_Position = u_proj_view * vec4(world_pos, u_layer, 1.0);
+    gl_Position = u_proj_view * vec4(world_pos, 0.0, 1.0);
 }
     """
         
@@ -52,7 +51,7 @@ uniform vec4 u_tint;
 uniform sampler2D u_texture;
 
 void main() {
-    fragColor = texture(u_texture, v_uv);
+    fragColor = texture(u_texture, v_uv) * u_tint;
 }
 """
 
@@ -76,21 +75,33 @@ void main() {
         
         self._instances = -1
         self._layers = 999
+        self._overlay_layer_reserve = 500
 
         self.position = glm.vec2(0, 0)
         self.scale: float = 1.0
-        self.color = skittle.Color(255, 255, 255)
+        self.color = skittle.color.WHITE
         self.layer: int = 0
         self.rotation_radians: float = 0.0
 
-    def render(self, camera: skittle.render.Camera, overlay: bool = False, mode: int = moderngl.TRIANGLES):
+    def _render_now(self, camera: skittle.render.Camera, overlay: bool = False, mode: int = moderngl.TRIANGLES):
+        
         self.uniform('u_proj_view', camera.proj_view_mat(overlay).to_bytes())
         self.uniform('u_position', (self.position.x, -self.position.y))
         self.uniform('u_scale', self.scale)
-        self.uniform('u_tint', (self.color.r, self.color.g, self.color.b, self.color.a))
-        self.uniform('u_layer', skittle.math.clamp(self.layer, -self._layers, self._layers) / self._layers)
+        self.uniform('u_tint', (self.color.r / 255, self.color.g / 255, self.color.b / 255, self.color.a / 255))
         self.uniform('u_rot_rad', self.rotation_radians)
+
         self._vao.render(mode, instances=self._instances)
+
+    def render(self, camera: skittle.render.Camera, overlay: bool = False, mode: int = moderngl.TRIANGLES):
+        layer = self.layer
+        if overlay:
+            layer += self._overlay_layer_reserve
+        else:
+            if layer > self._overlay_layer_reserve:
+                skittle.err(f"layers over {self._overlay_layer_reserve} are meant for overlay items")
+
+        camera.await_completion(self._render_now, overlay, mode, layer)
 
     def release(self):
         self._vbo.release()
@@ -147,10 +158,12 @@ class TextureMesh(Mesh):
         self.texture = self._ctx.texture(surface.get_size(), 4, data)
         self.texture.filter = (filter, filter)
     
-    def render(self, camera: skittle.render.Camera, overlay: bool = False, mode: int = moderngl.TRIANGLES):
+    def _render_now(self, camera: skittle.render.Camera, overlay: bool = False, mode: int = moderngl.TRIANGLES):
         self.texture.use(0)
         self.uniform('u_texture', 0)
-        return super().render(camera, overlay, mode)
+        return super()._render_now(camera, overlay, mode)
+    
+
     
     def release(self):
         super().release()
@@ -243,6 +256,6 @@ void main() {
         self.instance_vbo.write(glm.array.from_numbers(glm.float32, *data).to_bytes())
         self._instances = len(instances)
 
-    def render(self, camera: Camera, overlay: bool = False, mode: int = moderngl.TRIANGLES):
+    def _render_now(self, camera: Camera, overlay: bool = False, mode: int = moderngl.TRIANGLES):
         if self._instances > 0:
-            return super().render(camera, overlay, mode)
+            return super()._render_now(camera, overlay, mode)

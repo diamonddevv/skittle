@@ -6,9 +6,10 @@ import skittle
 type SceneSwitch = typing.Callable[[SceneManager, moderngl.Context, skittle.render.Camera], Scene]
 
 class SceneManager():
-    def __init__(self, ctx: moderngl.Context, camera: skittle.render.Camera, initial_scene: SceneSwitch | None) -> None:
+    def __init__(self, ctx: moderngl.Context, camera: skittle.render.Camera, initial_scene: SceneSwitch | None, window: skittle.render.Window) -> None:
         self.ctx = ctx
         self.camera = camera
+        self.window = window
         self.active = None if initial_scene == None else initial_scene(self, ctx, camera)
     
     def draw(self, ctx: moderngl.Context, camera: skittle.render.Camera):

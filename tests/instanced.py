@@ -22,7 +22,7 @@ class test_Instanced(skittle.render.Window):
         self.map.bake_instances([(x * 16, y * 16, random.randint(0, 2), random.randint(0, 7)) for x in range(500) for y in range(250)])
 
     def draw(self, ctx: moderngl.Context, camera: skittle.render.Camera):
-        self.ctx.clear(1,1,1)
+        self.ctx.clear()
         self.map.render(camera)
 
     def handle_zoom(self, event: pygame.Event):
