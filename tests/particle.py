@@ -27,7 +27,12 @@ class Scene(skittle.scene.Scene):
             max_particles=256)
         
         self.item = skittle.render.SpritesheetQuad(ctx, self.spritesheet, frame=(0, 4))
-        self.item.scale = 2
+        self.item.scale = glm.vec2(2)
+
+        self.rect = skittle.render.QuadMesh(ctx, 100, 50)
+        self.rect.position = glm.vec2(100, 100)
+        self.rect.color = skittle.color.RED
+        self.rect.outline_col = skittle.color.GREEN
 
     def draw(self, ctx: moderngl.Context, camera: skittle.render.Camera):
         ctx.clear(1.0, 1.0, 1.0)
@@ -35,6 +40,7 @@ class Scene(skittle.scene.Scene):
         self.particle.draw(camera)
 
         self.item.render(camera)
+        self.rect.render(camera)
 
         skittle.input.get_world_mouse_pos(camera)
 

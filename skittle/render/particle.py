@@ -119,4 +119,4 @@ class ParticleInstance():
         self.acceleration = acceleration
 
     def to_instance_data(self) -> skittle.render.MultiInstanceSpritesheetQuad._InstanceData:
-        return (self.pos.x, self.pos.y, self.cx, self.cy, self.color, 0, self.scale.x, self.scale.y)
+        return (self.pos.x, self.pos.y, self.cx, self.cy, self.color, 0, self.scale)
