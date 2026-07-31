@@ -15,7 +15,7 @@ class ParticleEmitter():
                  ttl_low: float, ttl_high: float,
                  
                  mesh: skittle.render.MultiInstanceSpritesheetQuad,
-                 sprite_cell: tuple[int, int],
+                 sprite_cells: list[tuple[int, int]],
 
                  acceleration_low: float = 0, acceleration_high: float = 0,
                  min_distance: float = 0.0,
@@ -26,8 +26,8 @@ class ParticleEmitter():
         self.emission_point = emission_point
         self.emission_radius = emission_radius
         self.colors = colors
-        self.size_low = size_low
-        self.size_high = size_high
+        self.scale_low = size_low
+        self.scale_high = size_high
         self.speed_low = speed_low
         self.speed_high = speed_high
         self.direction_low = direction_low
@@ -41,7 +41,7 @@ class ParticleEmitter():
         self.scale_rate = scale_rate
 
         self.mesh = mesh
-        self.sprite_cell = sprite_cell
+        self.sprite_cells = sprite_cells
         self.max_particles = max_particles
 
         self._particles: list[ParticleInstance] = []
@@ -77,18 +77,19 @@ class ParticleEmitter():
                 continue
 
             position = self.emission_point + skittle.math.radf_to_vec(random.uniform(0, glm.two_pi())) * random.uniform(self.min_distance, self.emission_radius)
-            size = random.uniform(self.size_low, self.size_high)
+            scale = random.uniform(self.scale_low, self.scale_high)
             color = random.choice(self.colors)
             speed = random.uniform(self.speed_low, self.speed_high)
             direction = random.uniform(self.direction_low, self.direction_high)
             ttl = random.uniform(self.ttl_low, self.ttl_high)
             acceleration = random.uniform(self.acceleration_low, self.acceleration_high)
+            sprite = random.choice(self.sprite_cells)
 
             self._particles.append(
                 ParticleInstance(
                     position,
-                    self.sprite_cell[0], self.sprite_cell[1],
-                    size,
+                    sprite[0], sprite[1],
+                    glm.vec2(scale),
                     color,
                     speed, 
                     direction,
@@ -100,7 +101,7 @@ class ParticleEmitter():
 
 class ParticleInstance():
     def __init__(self, pos: glm.vec2, cx: int, cy: int,
-                 size: float,
+                 scale: glm.vec2,
                  color: skittle.color.Color,
                  speed: float,
                  direction_rad: float,
@@ -110,7 +111,7 @@ class ParticleInstance():
         self.cx = cx
         self.cy = cy
 
-        self.size = size
+        self.scale = scale
         self.color = color
         self.speed = speed
         self.direction_rad = direction_rad
@@ -118,4 +119,4 @@ class ParticleInstance():
         self.acceleration = acceleration
 
     def to_instance_data(self) -> skittle.render.MultiInstanceSpritesheetQuad._InstanceData:
-        return (self.pos.x, self.pos.y, self.cx, self.cy, self.color, 0, self.size)
+        return (self.pos.x, self.pos.y, self.cx, self.cy, self.color, 0, self.scale.x, self.scale.y)

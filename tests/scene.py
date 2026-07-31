@@ -20,7 +20,7 @@ class AbsTestScene(skittle.scene.Scene):
     def draw(self, ctx: moderngl.Context, camera: Camera):
         self.text_renderer.render(camera, skittle.i18n.tr("scene.template", skittle.i18n.tr(self.key)), glm.vec2(0, 0), 1, overlay=True)
 
-    def update(self, dt: float):
+    def update(self, dt: float, camera: skittle.render.Camera):
         press = pygame.key.get_just_pressed()
         if press[pygame.K_SPACE]:
             self.switch_scene(self.next)

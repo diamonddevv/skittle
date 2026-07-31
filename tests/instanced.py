@@ -11,7 +11,7 @@ class test_Instanced(skittle.render.Window):
         super().__init__(None, "spritesheet", 500, 500, target_fps=0, fps_in_title=True)
         
         self.spritesheet = skittle.resource.spritesheet("tests/asset/spritesheet.png")
-        self.map = skittle.render.MultiInstanceSpritesheetQuad(self.ctx, self.spritesheet)
+        self.mesh = skittle.render.MultiInstanceSpritesheetQuad(self.ctx, self.spritesheet)
 
         self.panning = False
         self.last_mouse_pos = glm.vec2()
@@ -19,11 +19,11 @@ class test_Instanced(skittle.render.Window):
         self.sprite_idx_x = 0
         self.sprite_idx_y = 0
 
-        self.map.bake_instances([(x * 16, y * 16, random.randint(0, 2), random.randint(0, 7), skittle.color.WHITE, glm.quarter_pi(), random.uniform(.5, 1.5)) for x in range(500) for y in range(250)])
+        self.mesh.bake_instances([(x * 16, y * 16, random.randint(0, 2), random.randint(0, 7), skittle.color.WHITE, random.uniform(0, glm.two_pi()), glm.vec2(random.uniform(1/2, 2))) for x in range(500) for y in range(250)])
 
     def draw(self, ctx: moderngl.Context, camera: skittle.render.Camera):
         self.ctx.clear()
-        self.map.render(camera)
+        self.mesh.render(camera)
 
     def handle_zoom(self, event: pygame.Event):
         if event.y == 0:

@@ -54,7 +54,7 @@ class test_Window(skittle.render.Window):
 
         self.age = 0.0
 
-    def update(self, dt: float):
+    def update(self, dt: float, camera: skittle.render.Camera):
         self.age += dt
 
     def draw(self, ctx: moderngl.Context, camera: skittle.render.Camera):

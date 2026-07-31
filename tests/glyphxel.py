@@ -50,7 +50,7 @@ class test_Text(skittle.render.Window):
                          "vastaus on vbo-rebaking!\n\n" +
                          "ja se ei liiku :)\n\n\n" +
                          "this is a list: alpha, beta, gamma sekä delta", 
-                         pos=glm.vec2(0), overlay=True)
+                         pos=glm.vec2(20, 20), overlay=True)
 
     def handle_zoom(self, event: pygame.Event):
             if event.y == 0:

@@ -20,7 +20,7 @@ class test_Spritesheet(skittle.render.Window):
         self.sprite_idx_y = 0
         self.age = 0.0
 
-    def update(self, dt: float):
+    def update(self, dt: float, camera: skittle.render.Camera):
         self.age += dt
 
         just_pressed = pygame.key.get_just_pressed()

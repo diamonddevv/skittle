@@ -1,3 +1,10 @@
 {
-    "vertex_shader": "tests/asset/postprocess/crt.fsh"
+    "effect_uid": "crt",
+    "vertex_shader": "tests/asset/postprocess/crt.glsl",
+
+    "uniform_param_defaults": {
+        "u_warping": 0.55,
+        "u_scanline_darkness": 0.75,
+        "u_scanline_resolution_height": 540
+    }
 }

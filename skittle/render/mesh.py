@@ -2,6 +2,7 @@ from moderngl import TRIANGLES
 import pygame
 import moderngl
 import skittle
+import numpy
 from pyglm import glm
 
 from skittle.render.camera import Camera
@@ -15,7 +16,7 @@ in vec2 in_uv;
 
 uniform mat4 u_proj_view;
 uniform vec2 u_position;
-uniform float u_scale;
+uniform vec2 u_scale;
 uniform float u_rot_rad;
 
 out vec2 v_uv;
@@ -36,7 +37,7 @@ vec2 rotate(vec2 uv, float angle)
 
 void main() {
     v_uv = in_uv;
-    vec2 world_pos = rotate((in_vertex_pos + u_position) * u_scale, u_rot_rad);
+    vec2 world_pos = rotate(in_vertex_pos * u_scale, u_rot_rad) + u_position;
     gl_Position = u_proj_view * vec4(world_pos, 0.0, 1.0);
 }
     """
@@ -48,10 +49,9 @@ in vec2 v_uv;
 out vec4 fragColor;
 
 uniform vec4 u_tint;
-uniform sampler2D u_texture;
 
 void main() {
-    fragColor = texture(u_texture, v_uv) * u_tint;
+    fragColor = u_tint;
 }
 """
 
@@ -75,10 +75,9 @@ void main() {
         
         self._instances = -1
         self._layers = 999
-        self._overlay_layer_reserve = 500
 
         self.position = glm.vec2(0, 0)
-        self.scale: float = 1.0
+        self.scale: glm.vec2 = glm.vec2(1.0)
         self.color = skittle.color.WHITE
         self.layer: int = 0
         self.rotation_radians: float = 0.0
@@ -87,25 +86,20 @@ void main() {
         
         self.uniform('u_proj_view', camera.proj_view_mat(overlay).to_bytes())
         self.uniform('u_position', (self.position.x, -self.position.y))
-        self.uniform('u_scale', self.scale)
+        self.uniform('u_scale', (self.scale.x, self.scale.y))
         self.uniform('u_tint', (self.color.r / 255, self.color.g / 255, self.color.b / 255, self.color.a / 255))
         self.uniform('u_rot_rad', self.rotation_radians)
 
         self._vao.render(mode, instances=self._instances)
+
+    
 
     def render(self, camera: skittle.render.Camera, overlay: bool = False, mode: int = moderngl.TRIANGLES, no_cam: bool = False):
     
         if no_cam:
             self._render_now(camera, overlay, mode)
         else:
-            layer = self.layer
-            if overlay:
-                layer += self._overlay_layer_reserve
-            else:
-                if layer > self._overlay_layer_reserve:
-                    skittle.err(f"layers over {self._overlay_layer_reserve} are meant for overlay items")
-    
-
+            layer = camera.calc_layer(self.layer, overlay)
             camera.await_completion(self._render_now, overlay, mode, layer)
 
     def release(self):
@@ -142,9 +136,53 @@ void main() {
 
         return vertices, indices
 
+class QuadMesh(Mesh):
+    QUADMESH_FRAGMENT: str = """
+#version 330 core
+
+in vec2 v_uv;
+out vec4 fragColor;
+
+uniform vec4 u_tint;
+
+void main() {
+    fragColor = u_tint;
+}
+"""
+
+    def __init__(self, ctx: moderngl.Context, w: int, h: int, vertex: str = Mesh.VERTEX, fragment: str = QUADMESH_FRAGMENT) -> None:
+        vertices, indices = Mesh.uv_quad(w, h)
+        
+        super().__init__(
+            ctx, 
+            vertices,
+            indices=indices,
+            vertex=vertex,
+            fragment=fragment
+        )
+
+        self.outline_col: skittle.color.Color | None = None
+        self.outline_width: float = 0.0
+
+
+
 
 class TextureMesh(Mesh):
-    def __init__(self, ctx: moderngl.Context, w: int, h: int, u0: float, v0: float, u1: float, v1: float, texture: pygame.Surface, vertex: str = Mesh.VERTEX, fragment: str = Mesh.FRAGMENT) -> None:
+    TEXTURE_FRAGMENT: str = """
+#version 330 core
+
+in vec2 v_uv;
+out vec4 fragColor;
+
+uniform vec4 u_tint;
+uniform sampler2D u_texture;
+
+void main() {
+    fragColor = texture(u_texture, v_uv) * u_tint;
+}
+"""
+
+    def __init__(self, ctx: moderngl.Context, w: int, h: int, u0: float, v0: float, u1: float, v1: float, texture: pygame.Surface, vertex: str = Mesh.VERTEX, fragment: str = TEXTURE_FRAGMENT) -> None:
         vertices, indices = Mesh.uv_quad(w, h, u0, v0, u1, v1)
         
         super().__init__(
@@ -168,20 +206,18 @@ class TextureMesh(Mesh):
         self.uniform('u_texture', 0)
         return super()._render_now(camera, overlay, mode)
     
-
-    
     def release(self):
         super().release()
         self.texture.release()
 
 class SpriteQuad(TextureMesh):
-    def __init__(self, ctx: moderngl.Context, texture: pygame.Surface, vertex: str = Mesh.VERTEX, fragment: str = Mesh.FRAGMENT) -> None:
+    def __init__(self, ctx: moderngl.Context, texture: pygame.Surface, vertex: str = Mesh.VERTEX, fragment: str = TextureMesh.TEXTURE_FRAGMENT) -> None:
         super().__init__(ctx, texture.width, texture.height, 0, 0, 1, 1, texture, vertex, fragment)
 
 class SpritesheetQuad(TextureMesh):
-    def __init__(self, ctx: moderngl.Context, spritesheet: skittle.resource.Spritesheet, vertex: str = Mesh.VERTEX, fragment: str = Mesh.FRAGMENT) -> None:
-        self.frame = (0, 0)
-        u0, v0, u1, v1 = spritesheet.uv(0, 0)
+    def __init__(self, ctx: moderngl.Context, spritesheet: skittle.resource.Spritesheet, frame: tuple[int, int] = (0, 0), vertex: str = Mesh.VERTEX, fragment: str = TextureMesh.TEXTURE_FRAGMENT) -> None:
+        self.frame = frame
+        u0, v0, u1, v1 = spritesheet.uv(*self.frame)
 
         super().__init__(ctx, spritesheet.sprite_w, spritesheet.sprite_h, u0, v0, u1, v1, spritesheet.surface, vertex, fragment)
 
@@ -207,11 +243,11 @@ in vec2 in_instance_uv_offset;
 in vec2 in_instance_uv_scale;
 in vec4 in_instance_col;
 in float in_instance_rotation;
-in float in_instance_scale;
+in vec2 in_instance_scale;
 
 uniform mat4 u_proj_view;
 uniform vec2 u_position;
-uniform float u_scale;
+uniform vec2 u_scale;
 uniform float u_layer;
 
 out vec4 v_instance_col;
@@ -220,24 +256,22 @@ out vec2 v_uv;
 const float PI = 3.14159;
 
 vec2 rotate(vec2 uv, float angle) {
-    // does not work as intended. need to get mesh center
 
     angle += PI/2;
 	mat2 rotation = mat2(vec2(sin(angle), -cos(angle)),
 						vec2(cos(angle), sin(angle)));
-	
-    vec2 half_uv = uv * vec2(0.5);                    
-	uv -= half_uv;
+	                   
+	uv -= vec2(0.5);
 	uv = uv * rotation;
-	uv += half_uv;
+	uv += vec2(0.5);
 	return uv;
 }
 
 void main() {
+
     v_uv = in_uv * in_instance_uv_scale + in_instance_uv_offset;
     v_instance_col = in_instance_col;
-    vec2 world_pos = (in_vertex_pos + u_position + in_instance_pos) * in_instance_scale;
-    world_pos = rotate(world_pos, in_instance_rotation);
+    vec2 world_pos = (rotate(in_vertex_pos * in_instance_scale, in_instance_rotation) + u_position + in_instance_pos);
     gl_Position = u_proj_view * vec4(world_pos, 0.0, 1.0);
 }
     """
@@ -265,8 +299,9 @@ void main() {
         int, # spritesheet cell y
         skittle.color.Color, # tint color
         float, # rotation
-        float # scale
+        glm.vec2, # scale
         ]
+    FLOAT_COUNT: int = 13
         
 
     def __init__(self, ctx: moderngl.Context, spritesheet: skittle.resource.Spritesheet, vertex: str = PER_INSTANCE_VERTEX, fragment: str = PER_INSTANCE_FRAGMENT) -> None:
@@ -277,41 +312,49 @@ void main() {
         self._vao.release()
 
         # make new vbo and instanced vao
-        self.build_vao_vbo(500)
+        self._instances = 0
+        self._reserve = self.build_vao_vbo(500)
 
     def build_vao_vbo(self, reserve: int = 500):
-        instance_size = 12*4
+        if hasattr(self, "instance_vbo"): self.instance_vbo.release()
+        if hasattr(self, "_vao"): self._vao.release()
+
+        instance_size = MultiInstanceSpritesheetQuad.FLOAT_COUNT * 4
 
         self.instance_vbo = self._ctx.buffer(reserve=instance_size * reserve, dynamic=True)
-        self._instances = 0
 
         self._vao = self._ctx.vertex_array(self._program, [
             (self._vbo, "2f 2f", 'in_vertex_pos', 'in_uv'),
-            (self.instance_vbo, "2f 2f 2f 4f f f /i", 
+            (self.instance_vbo, "2f 2f 2f 4f f 2f /i", 
              "in_instance_pos", "in_instance_uv_offset", 
              "in_instance_uv_scale", "in_instance_col",
              "in_instance_rotation", "in_instance_scale")
         ], index_buffer=self._ibo)
 
-    def bake_instances(self, instances: list[_InstanceData]):
-        data = []
+        return reserve
 
-        for x, y, cx, cy, col, rot, scale in instances:
+    def bake_instances(self, instances: list[_InstanceData]):
+        data = numpy.empty((len(instances), MultiInstanceSpritesheetQuad.FLOAT_COUNT), dtype=numpy.float32)
+
+
+        for i, (x, y, cx, cy, col, rot, scale) in enumerate(instances):
             u0, v0, u1, v1 = self.spritesheet.uv(cx, cy)
-            data.extend([
+
+            data[i] = [
                 x, y, 
                 u0, v0, 
                 u1-u0, v1-v0,
                 col.r/255, col.g/255, col.b/255, col.a/255,
                 rot,
-                scale,
-            ])
+                scale.x, scale.y,
+            ]
 
-        if len(instances) > self._instances:
-            self.build_vao_vbo(len(instances))
-        
-        self.instance_vbo.write(glm.array.from_numbers(glm.float32, *data).to_bytes())
         self._instances = len(instances)
+
+        if len(instances) > self._reserve:
+            self._reserve = self.build_vao_vbo(int(len(instances) * 1.2))
+        
+        self.instance_vbo.write(data.tobytes())
 
     def _render_now(self, camera: Camera, overlay: bool = False, mode: int = moderngl.TRIANGLES):
         if self._instances > 0:

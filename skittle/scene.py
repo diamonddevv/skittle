@@ -16,9 +16,9 @@ class SceneManager():
         if self.active != None:
             self.active.draw(ctx, camera)
 
-    def update(self, dt: float):
+    def update(self, dt: float, camera: skittle.render.Camera):
         if self.active != None:
-            self.active.update(dt)
+            self.active.update(dt, camera)
 
     def switch(self, scene: SceneSwitch):
         if self.active != None:
@@ -33,7 +33,7 @@ class Scene():
     def draw(self, ctx: moderngl.Context, camera: skittle.render.Camera):
         pass
 
-    def update(self, dt: float):
+    def update(self, dt: float, camera: skittle.render.Camera):
         pass
 
     def close(self):

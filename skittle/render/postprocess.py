@@ -1,7 +1,9 @@
 import moderngl
 import time
 import json
+import typing
 import skittle
+import pygame
 from pyglm import glm
 
 
@@ -11,7 +13,7 @@ class PostProcessor():
         self.width = width
         self.height = height
 
-        self._effects: list[PostProcessEffect] = []
+        self._effects: dict[str, PostProcessEffect] = {}
 
         self.scene_fbo: moderngl.Framebuffer
         self.ping_fbo: moderngl.Framebuffer
@@ -56,15 +58,18 @@ class PostProcessor():
         buffers = [self.ping_fbo, self.pong_fbo]
         textures = [self.ping_tex, self.pong_tex]
 
-        for i, effect in enumerate(self._effects):
+        for i, uid in enumerate(self._effects):
             is_last = i == (len(self._effects) - 1)
             target = self.ctx.screen if is_last else buffers[i % 2]
-            effect.render(src_tex, target, self.width, self.height)
+            self._effects[uid].render(src_tex, target, self.width, self.height)
             if not is_last:
                 src_tex = textures[i % 2]
 
     def add(self, postproc: PostProcessEffect):
-        self._effects.append(postproc)
+        self._effects[postproc.uid] = postproc
+
+    def modify_param(self, id: str, param: str, value: float | tuple[float, ...]):
+        self._effects[id]._params[param] = value
 
     def release(self, all: bool = True):
         for fbo, tex in [
@@ -74,8 +79,11 @@ class PostProcessor():
             ]:
             fbo.release()
             tex.release()
-
+        
         if all:
+            for uid in self._effects:
+                self._effects[uid].release()
+                
             self.scene_fbo.release()
             self.scene_tex.release()
         
@@ -97,14 +105,26 @@ void main() {
 }
 """
 
-    def __init__(self, ctx: moderngl.Context, fragment_shader: str, vertex_shader: str = VERTEX):
+    def __init__(self, ctx: moderngl.Context, uid: str, fragment_shader: str, vertex_shader: str = VERTEX, params: dict[str, typing.Any] = {}, sampler_paths: list[str] = []):
         self.ctx = ctx
+        self.uid = uid
         self._program = ctx.program(vertex_shader=vertex_shader, fragment_shader=fragment_shader)
+
+        self._params = params
+
+        self._samplers: list[moderngl.Texture] = []
+        self._build_use_sampler_textures(sampler_paths)
 
         vertices, indices = skittle.render.Mesh.uv_quad(2, 2)
         self._vbo = ctx.buffer(glm.array.from_numbers(glm.float32, *vertices).to_bytes())
-        self._ibo = ctx.buffer(glm.array.from_numbers(glm.int32, *indices).to_bytes()) if indices != None else None
+        self._ibo = ctx.buffer(glm.array.from_numbers(glm.int32, *indices).to_bytes())
         self._vao = ctx.vertex_array(self._program, [(self._vbo, '2f 2f', 'in_pos', 'in_uv')], index_buffer=self._ibo)
+
+    def _build_use_sampler_textures(self, sampler_paths: list[str]):
+        for i, path in enumerate(sampler_paths):
+            img = skittle.resource.image(path)
+            texture = self.ctx.texture(img.size, 4, pygame.image.tobytes(img, "RGBA"))
+            texture.use(i + 1) # 0 is reserved for the screen texture
 
     def uniform(self, key: str, value):
         if key in self._program:
@@ -119,8 +139,18 @@ void main() {
         self.uniform("u_screen_texture", 0)
         self.uniform("u_resolution", (width, height))
         self.uniform("u_time", time.perf_counter())
+        
+        for param in self._params:
+            self.uniform(param, self._params[param])
+
         self._vao.render(moderngl.TRIANGLES)
 
+    def release(self):
+        for sampler in self._samplers:
+            sampler.release()
+        self._vbo.release()
+        self._ibo.release()
+        self._vao.release()
 
     @staticmethod
     def from_json(ctx: moderngl.Context, filepath: str) -> PostProcessEffect:
@@ -132,6 +162,9 @@ void main() {
 
         effect = PostProcessEffect(
             ctx,
-            vertex
+            data["effect_uid"],
+            vertex,
+            params=data.get("uniform_param_defaults", {}),
+            sampler_paths=data.get("samplers", [])
         )
         return effect

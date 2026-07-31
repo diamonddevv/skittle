@@ -15,28 +15,39 @@ class Scene(skittle.scene.Scene):
         self.particle = skittle.render.ParticleEmitter(
             glm.vec2(0), 
             64, 
-            [skittle.color.Color('red'), skittle.color.Color('orange'), skittle.color.Color("yellow")], 
+            [skittle.color.Color('white')], 
             1, 4,
             8, 16,
             0, glm.two_pi(),
-            3, 5,
+            1/2, 2,
             skittle.render.MultiInstanceSpritesheetQuad(
                 ctx, self.spritesheet
-            ), (0, 0), max_particles=1024)
+            ),
+            [(i,0) for i in range(6)],
+            max_particles=256)
+        
+        self.item = skittle.render.SpritesheetQuad(ctx, self.spritesheet, frame=(0, 4))
+        self.item.scale = 2
 
     def draw(self, ctx: moderngl.Context, camera: skittle.render.Camera):
         ctx.clear(1.0, 1.0, 1.0)
         self.text_renderer.render(camera, f"fps: {self.scene_manager.window._clock.get_fps():.0f}\nparticles: {len(self.particle._particles)}", glm.vec2(20, 20), color=skittle.color.BLACK, overlay=True)
         self.particle.draw(camera)
 
-    def update(self, dt: float):
+        self.item.render(camera)
+
+        skittle.input.get_world_mouse_pos(camera)
+
+    def update(self, dt: float, camera: skittle.render.Camera):
         self.particle.emit()
         self.particle.update(dt)
+
+        self.item.position = skittle.input.get_world_mouse_pos(camera)
 
 
 class test_ParticlesAndPostProcessing(skittle.render.Window):
     def __init__(self) -> None:
-        super().__init__(Scene, "particles", 500, 500, target_fps=0, fps_in_title=True)
+        super().__init__(Scene, "particles", 1280, 720, fps_in_title=True)
 
         self.panning = False
         self.last_mouse_pos = glm.vec2()

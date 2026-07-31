@@ -1,6 +1,7 @@
 from pyglm import glm
 import moderngl
 import typing
+import skittle
 
 class Camera():
     type _PaintersAlgorithmRender = typing.Callable[[Camera, bool, int], typing.Any]
@@ -12,6 +13,8 @@ class Camera():
         self.rotation = 0.0
 
         self.position = glm.vec2(0)
+
+        self._overlay_layer_reserve = 500
 
         self._painters_algorithm_layers: dict[int, list[tuple[Camera._PaintersAlgorithmRender, bool, int]]] = {}
 
@@ -41,6 +44,13 @@ class Camera():
     def proj_view_mat(self, overlay: bool = False):
         return self.projection(overlay) * self.view_matrix(overlay)
     
+    def calc_layer(self, layer: int = 0, overlay: bool = False) -> int:
+        if overlay:
+            layer += self._overlay_layer_reserve
+        else:
+            if layer > self._overlay_layer_reserve:
+                skittle.err(f"layers over {self._overlay_layer_reserve} are meant for overlay items")
+        return layer
 
     def await_completion(self, function: _PaintersAlgorithmRender, overlay: bool, mode: int = moderngl.TRIANGLES, layer: int = 0):
         """

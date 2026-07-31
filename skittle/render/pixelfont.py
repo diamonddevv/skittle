@@ -81,7 +81,14 @@ class TextRenderer():
         return (longest_line_width, lines * self.spritesheet.sprite_h)
 
     def render(self, camera: skittle.render.Camera, text: str, pos: glm.vec2, scale: float = 1, rotation_radians: float = 0, color: skittle.color.Color = skittle.color.WHITE, overlay: bool = False):
+        camera.await_completion(lambda cam, ov, mode: self._render_now(
+            cam, text, pos, scale, rotation_radians, color, ov
+            ), overlay, layer=camera.calc_layer(0, overlay))
 
+    def _render_now(self, camera: skittle.render.Camera, text: str, pos: glm.vec2, scale: float = 1, rotation_radians: float = 0, color: skittle.color.Color = skittle.color.WHITE, overlay: bool = False):
+        """
+        call `render` instead. this function exists to hack around the fact a single mesh could only draw one piece of text per frame, so instead they're indiviudally batched on a layer of abstraction higher than the mesh itself
+        """
         passed, bad_char = self.verify_all_codepoints(text)
         if not passed:
             skittle.err(f"tried to render text with invalid character '{bad_char}'")
@@ -102,21 +109,21 @@ class TextRenderer():
             else:
                 cx, cy = self.get_codepoint_pos(char)
                 width = self.get_character_width(char)
+                scale_vec = glm.vec2(scale)
                 inst_data.append((
                     width_pos + self.spritesheet.sprite_w / 2,
                     -line * self.spritesheet.sprite_h - self.spritesheet.sprite_h / 2,
                     cx, cy,
                     color,
                     rotation_radians,
-                    scale
+                    scale_vec
                 ))
                 width_pos += width
 
         self.mesh.bake_instances(inst_data)
 
         self.mesh.position = pos / scale
-        self.mesh.render(camera, overlay)
-
+        self.mesh._render_now(camera, overlay)
 
     def release(self):
         self.mesh.release()

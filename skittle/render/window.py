@@ -1,5 +1,4 @@
 import pygame
-import typing
 import moderngl
 
 import skittle
@@ -28,8 +27,6 @@ class Window():
         self.ctx.enable(moderngl.BLEND)
         pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MAJOR_VERSION, skittle.__GLSL_MAJOR__)
         pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MINOR_VERSION, skittle.__GLSL_MINOR__)
-        
-
 
         self.camera = skittle.render.Camera(width, height)
         self.post_processor = skittle.render.PostProcessor(self.ctx, width, height)
@@ -45,7 +42,7 @@ class Window():
 
         while self._running:
             self.event_handle()
-            self.update(dt)
+            self.update(dt, self.camera)
             if not self._running:
                 continue
 
@@ -62,8 +59,8 @@ class Window():
                 pygame.display.set_caption(self.title)
             dt = self._clock.tick(self.target_fps) / 1000
 
-    def update(self, dt: float):
-        self.scene_manager.update(dt)
+    def update(self, dt: float, camera: skittle.render.Camera):
+        self.scene_manager.update(dt, camera)
 
     def draw(self, ctx: moderngl.Context, camera: skittle.render.Camera):
         self.scene_manager.draw(ctx, camera)
@@ -76,6 +73,8 @@ class Window():
                 self.ctx.viewport = (0, 0, e.w, e.h)
                 self.camera.resize(e.w, e.h)
                 self.post_processor.resize(e.w, e.h)
+
+            skittle.input.TextInput._textinput_event(e)
 
             # event handlers
             if e.type in skittle._EventHandler._PYGAME_EVENT_HANDLERS:
