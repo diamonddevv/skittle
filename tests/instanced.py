@@ -19,7 +19,7 @@ class test_Instanced(skittle.render.Window):
         self.sprite_idx_x = 0
         self.sprite_idx_y = 0
 
-        self.map.bake_instances([(x * 16, y * 16, random.randint(0, 2), random.randint(0, 7)) for x in range(500) for y in range(250)])
+        self.map.bake_instances([(x * 16, y * 16, random.randint(0, 2), random.randint(0, 7), skittle.color.WHITE, glm.quarter_pi(), random.uniform(.5, 1.5)) for x in range(500) for y in range(250)])
 
     def draw(self, ctx: moderngl.Context, camera: skittle.render.Camera):
         self.ctx.clear()

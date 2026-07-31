@@ -105,16 +105,16 @@ class TextRenderer():
                 inst_data.append((
                     width_pos + self.spritesheet.sprite_w / 2,
                     -line * self.spritesheet.sprite_h - self.spritesheet.sprite_h / 2,
-                    cx, cy
+                    cx, cy,
+                    color,
+                    rotation_radians,
+                    scale
                 ))
                 width_pos += width
 
         self.mesh.bake_instances(inst_data)
 
-        self.mesh.position = pos
-        self.mesh.scale = scale
-        self.mesh.color = color
-        self.mesh.rotation_radians = rotation_radians
+        self.mesh.position = pos / scale
         self.mesh.render(camera, overlay)
 
 

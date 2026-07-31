@@ -93,15 +93,20 @@ void main() {
 
         self._vao.render(mode, instances=self._instances)
 
-    def render(self, camera: skittle.render.Camera, overlay: bool = False, mode: int = moderngl.TRIANGLES):
-        layer = self.layer
-        if overlay:
-            layer += self._overlay_layer_reserve
+    def render(self, camera: skittle.render.Camera, overlay: bool = False, mode: int = moderngl.TRIANGLES, no_cam: bool = False):
+    
+        if no_cam:
+            self._render_now(camera, overlay, mode)
         else:
-            if layer > self._overlay_layer_reserve:
-                skittle.err(f"layers over {self._overlay_layer_reserve} are meant for overlay items")
+            layer = self.layer
+            if overlay:
+                layer += self._overlay_layer_reserve
+            else:
+                if layer > self._overlay_layer_reserve:
+                    skittle.err(f"layers over {self._overlay_layer_reserve} are meant for overlay items")
+    
 
-        camera.await_completion(self._render_now, overlay, mode, layer)
+            camera.await_completion(self._render_now, overlay, mode, layer)
 
     def release(self):
         self._vbo.release()
@@ -197,28 +202,74 @@ class MultiInstanceSpritesheetQuad(TextureMesh):
 in vec2 in_vertex_pos;
 in vec2 in_uv;
 
-in vec2 in_tile_pos;
-in vec2 in_tile_uv_offset;
-in vec2 in_tile_uv_scale;
+in vec2 in_instance_pos;
+in vec2 in_instance_uv_offset;
+in vec2 in_instance_uv_scale;
+in vec4 in_instance_col;
+in float in_instance_rotation;
+in float in_instance_scale;
 
 uniform mat4 u_proj_view;
 uniform vec2 u_position;
 uniform float u_scale;
 uniform float u_layer;
 
+out vec4 v_instance_col;
 out vec2 v_uv;
 
+const float PI = 3.14159;
+
+vec2 rotate(vec2 uv, float angle) {
+    // does not work as intended. need to get mesh center
+
+    angle += PI/2;
+	mat2 rotation = mat2(vec2(sin(angle), -cos(angle)),
+						vec2(cos(angle), sin(angle)));
+	
+    vec2 half_uv = uv * vec2(0.5);                    
+	uv -= half_uv;
+	uv = uv * rotation;
+	uv += half_uv;
+	return uv;
+}
+
 void main() {
-    v_uv = in_uv * in_tile_uv_scale + in_tile_uv_offset;
-    vec2 world_pos = (in_vertex_pos + u_position + in_tile_pos) * u_scale;
-    gl_Position = u_proj_view * vec4(world_pos, u_layer, 1.0);
+    v_uv = in_uv * in_instance_uv_scale + in_instance_uv_offset;
+    v_instance_col = in_instance_col;
+    vec2 world_pos = (in_vertex_pos + u_position + in_instance_pos) * in_instance_scale;
+    world_pos = rotate(world_pos, in_instance_rotation);
+    gl_Position = u_proj_view * vec4(world_pos, 0.0, 1.0);
 }
     """
 
-    type _InstanceData = tuple[float, float, int, int] # pos x, pos y, ss cell x, ss cell y
+    PER_INSTANCE_FRAGMENT: str = """
+#version 330 core
+
+in vec2 v_uv;
+in vec4 v_instance_col;
+
+out vec4 fragColor;
+
+uniform vec4 u_tint;
+uniform sampler2D u_texture;
+
+void main() {
+    fragColor = texture(u_texture, v_uv) * v_instance_col;
+}
+"""
+
+    type _InstanceData = tuple[
+        float, # pos x
+        float, # pos y
+        int, # spritesheet cell x
+        int, # spritesheet cell y
+        skittle.color.Color, # tint color
+        float, # rotation
+        float # scale
+        ]
         
 
-    def __init__(self, ctx: moderngl.Context, spritesheet: skittle.resource.Spritesheet, vertex: str = PER_INSTANCE_VERTEX, fragment: str = Mesh.FRAGMENT) -> None:
+    def __init__(self, ctx: moderngl.Context, spritesheet: skittle.resource.Spritesheet, vertex: str = PER_INSTANCE_VERTEX, fragment: str = PER_INSTANCE_FRAGMENT) -> None:
         super().__init__(ctx, spritesheet.sprite_w, spritesheet.sprite_h, 0, 0, 1, 1, spritesheet.surface, vertex, fragment)
         self.spritesheet = spritesheet
 
@@ -229,25 +280,31 @@ void main() {
         self.build_vao_vbo(500)
 
     def build_vao_vbo(self, reserve: int = 500):
-        instance_size = 6*4
+        instance_size = 12*4
 
         self.instance_vbo = self._ctx.buffer(reserve=instance_size * reserve, dynamic=True)
         self._instances = 0
 
         self._vao = self._ctx.vertex_array(self._program, [
             (self._vbo, "2f 2f", 'in_vertex_pos', 'in_uv'),
-            (self.instance_vbo, "2f 2f 2f /i", "in_tile_pos", "in_tile_uv_offset", "in_tile_uv_scale")
+            (self.instance_vbo, "2f 2f 2f 4f f f /i", 
+             "in_instance_pos", "in_instance_uv_offset", 
+             "in_instance_uv_scale", "in_instance_col",
+             "in_instance_rotation", "in_instance_scale")
         ], index_buffer=self._ibo)
 
     def bake_instances(self, instances: list[_InstanceData]):
         data = []
 
-        for x, y, cx, cy in instances:
+        for x, y, cx, cy, col, rot, scale in instances:
             u0, v0, u1, v1 = self.spritesheet.uv(cx, cy)
             data.extend([
                 x, y, 
                 u0, v0, 
-                u1-u0, v1-v0
+                u1-u0, v1-v0,
+                col.r/255, col.g/255, col.b/255, col.a/255,
+                rot,
+                scale,
             ])
 
         if len(instances) > self._instances:

@@ -8,7 +8,7 @@ class ParticleEmitter():
     def __init__(self,
                  emission_point: glm.vec2, 
                  emission_radius: float, 
-                 colors: list[skittle.Color], 
+                 colors: list[skittle.color.Color], 
                  size_low: float, size_high: float, 
                  speed_low: float, speed_high: float, 
                  direction_low: float, direction_high: float, 
@@ -101,7 +101,7 @@ class ParticleEmitter():
 class ParticleInstance():
     def __init__(self, pos: glm.vec2, cx: int, cy: int,
                  size: float,
-                 color: skittle.Color,
+                 color: skittle.color.Color,
                  speed: float,
                  direction_rad: float,
                  ttl: float,
@@ -118,4 +118,4 @@ class ParticleInstance():
         self.acceleration = acceleration
 
     def to_instance_data(self) -> skittle.render.MultiInstanceSpritesheetQuad._InstanceData:
-        return (self.pos.x, self.pos.y, self.cx, self.cy)
+        return (self.pos.x, self.pos.y, self.cx, self.cy, self.color, 0, self.size)

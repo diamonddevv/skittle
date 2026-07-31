@@ -32,6 +32,7 @@ class Window():
 
 
         self.camera = skittle.render.Camera(width, height)
+        self.post_processor = skittle.render.PostProcessor(self.ctx, width, height)
         self.scene_manager = skittle.scene.SceneManager(self.ctx, self.camera, initial_scene, self)
 
         if icon_path != "":
@@ -45,12 +46,14 @@ class Window():
         while self._running:
             self.event_handle()
             self.update(dt)
+            if not self._running:
+                continue
 
-            self.ctx.screen.depth_mask = True
             self.ctx.clear()
-            self.ctx.screen.depth_mask = False
+            self.post_processor._begin()
             self.draw(self.ctx, self.camera)
             self.camera.finish()
+            self.post_processor._finish()
             pygame.display.flip()
 
             if self._fps_in_title:
@@ -72,6 +75,7 @@ class Window():
             if e.type == pygame.VIDEORESIZE:
                 self.ctx.viewport = (0, 0, e.w, e.h)
                 self.camera.resize(e.w, e.h)
+                self.post_processor.resize(e.w, e.h)
 
             # event handlers
             if e.type in skittle._EventHandler._PYGAME_EVENT_HANDLERS:
@@ -80,6 +84,8 @@ class Window():
 
     def close(self):
         self._running = False
+        self.post_processor.release()
+        self.ctx.release()
 
     def switch_scene(self, scene: skittle.scene.SceneSwitch):
         self.scene_manager.switch(scene)

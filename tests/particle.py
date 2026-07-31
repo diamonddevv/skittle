@@ -15,7 +15,7 @@ class Scene(skittle.scene.Scene):
         self.particle = skittle.render.ParticleEmitter(
             glm.vec2(0), 
             64, 
-            [skittle.color.Color('red')], 
+            [skittle.color.Color('red'), skittle.color.Color('orange'), skittle.color.Color("yellow")], 
             1, 4,
             8, 16,
             0, glm.two_pi(),
@@ -25,7 +25,8 @@ class Scene(skittle.scene.Scene):
             ), (0, 0), max_particles=1024)
 
     def draw(self, ctx: moderngl.Context, camera: skittle.render.Camera):
-        self.text_renderer.render(camera, f"fps: {self.scene_manager.window._clock.get_fps():.0f}\nparticles: {len(self.particle._particles)}", glm.vec2(20, 20), 1, 0, color=skittle.color.RED, overlay=True)
+        ctx.clear(1.0, 1.0, 1.0)
+        self.text_renderer.render(camera, f"fps: {self.scene_manager.window._clock.get_fps():.0f}\nparticles: {len(self.particle._particles)}", glm.vec2(20, 20), color=skittle.color.BLACK, overlay=True)
         self.particle.draw(camera)
 
     def update(self, dt: float):
@@ -33,12 +34,15 @@ class Scene(skittle.scene.Scene):
         self.particle.update(dt)
 
 
-class test_Particles(skittle.render.Window):
+class test_ParticlesAndPostProcessing(skittle.render.Window):
     def __init__(self) -> None:
         super().__init__(Scene, "particles", 500, 500, target_fps=0, fps_in_title=True)
 
         self.panning = False
         self.last_mouse_pos = glm.vec2()
+
+        self.crt = skittle.render.PostProcessEffect.from_json(self.ctx, "tests/asset/postprocess/crt.json")
+        self.post_processor.add(self.crt)
 
     def handle_zoom(self, event: pygame.Event):
         if event.y == 0:
@@ -63,7 +67,7 @@ class test_Particles(skittle.render.Window):
         
 
 if __name__ == "__main__":
-    wnd = test_Particles()
+    wnd = test_ParticlesAndPostProcessing()
     skittle.bind_pygame_event_handler(wnd.handle_zoom, pygame.MOUSEWHEEL)
     skittle.bind_pygame_event_handler(wnd.handle_pan, pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION)
     wnd.run()
