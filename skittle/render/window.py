@@ -27,6 +27,7 @@ class Window():
         self.ctx.enable(moderngl.BLEND)
         pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MAJOR_VERSION, skittle.__GLSL_MAJOR__)
         pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MINOR_VERSION, skittle.__GLSL_MINOR__)
+        skittle.draw._Meshes._init(self.ctx)
 
         self.camera = skittle.render.Camera(width, height)
         self.post_processor = skittle.render.PostProcessor(self.ctx, width, height)

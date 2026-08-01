@@ -29,10 +29,7 @@ class Scene(skittle.scene.Scene):
         self.item = skittle.render.SpritesheetQuad(ctx, self.spritesheet, frame=(0, 4))
         self.item.scale = glm.vec2(2)
 
-        self.rect = skittle.render.QuadMesh(ctx, 100, 50)
-        self.rect.position = glm.vec2(100, 100)
-        self.rect.color = skittle.color.RED
-        self.rect.outline_col = skittle.color.GREEN
+        self.rect = skittle.math.Rect(100, 100, 100, 50)
 
     def draw(self, ctx: moderngl.Context, camera: skittle.render.Camera):
         ctx.clear(1.0, 1.0, 1.0)
@@ -40,7 +37,7 @@ class Scene(skittle.scene.Scene):
         self.particle.draw(camera)
 
         self.item.render(camera)
-        self.rect.render(camera)
+        skittle.draw.rect(camera, self.rect, skittle.color.GREEN if self.rect.collides_point(skittle.input.get_world_mouse_pos(camera)) else skittle.color.RED)
 
         skittle.input.get_world_mouse_pos(camera)
 

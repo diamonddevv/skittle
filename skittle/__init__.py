@@ -18,6 +18,7 @@ from skittle import tween
 from skittle import render
 from skittle import input
 from skittle import ui
+from skittle import draw
 from skittle import resource
 
 __VERSION__: str = "0.0.0"
@@ -46,4 +47,3 @@ def bind_pygame_event_handler(handler: _EventHandler._PygameEventHandler, *event
 def init():
     log(f"initialised (v{__VERSION__})")
     pygame.init()
-
