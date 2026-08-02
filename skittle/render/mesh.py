@@ -5,8 +5,6 @@ import skittle
 import numpy
 from pyglm import glm
 
-from skittle.render.camera import Camera
-
 class Mesh():
     VERTEX: str = """
 #version 330 core
@@ -174,9 +172,9 @@ void main() {
         )
 
         self.outline_col: skittle.color.Color | None = None
-        self.outline_width = 5
+        self.outline_width = 5.0
 
-    def _render_now(self, camera: Camera, overlay: bool = False, mode: int = moderngl.TRIANGLES):
+    def _render_now(self, camera: skittle.render.Camera, overlay: bool = False, mode: int = moderngl.TRIANGLES):
         if self.outline_col != None:
             self.uniform("u_outline_color", (
                 self.outline_col.r/255, 
@@ -377,6 +375,6 @@ void main() {
         
         self.instance_vbo.write(data.tobytes())
 
-    def _render_now(self, camera: Camera, overlay: bool = False, mode: int = moderngl.TRIANGLES):
+    def _render_now(self, camera: skittle.render.Camera, overlay: bool = False, mode: int = moderngl.TRIANGLES):
         if self._instances > 0:
             return super()._render_now(camera, overlay, mode)

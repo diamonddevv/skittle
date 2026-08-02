@@ -19,16 +19,21 @@ class Camera():
         self._painters_algorithm_layers: dict[int, list[tuple[Camera._PaintersAlgorithmRender, bool, int]]] = {}
 
     def projection(self, overlay: bool):
+        # the projection controls frame zooming, or in other words, what is in the frame
+
         half_w = self.width / 2 / (self.zoom if not overlay else 1)
         half_h = self.height / 2 / (self.zoom if not overlay else 1)
 
         return glm.ortho(
             -half_w, half_w,
             -half_h, half_h,
-            -1, 1
+            -1, 1 # we do depth via the painters algorithm. its slower, sure, but its easier.
         )
     
     def view_matrix(self, overlay: bool):
+
+        # rotation -> scaling -> translation. has to be that order
+
         view = glm.mat4(1.0)
         if not overlay:
             if self.rotation != 0.0:
