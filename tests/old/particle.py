@@ -50,7 +50,7 @@ class Scene(skittle.scene.Scene):
 
 class test_ParticlesAndPostProcessing(skittle.render.Window):
     def __init__(self) -> None:
-        super().__init__(Scene, "particles", 1280, 720, fps_in_title=True)
+        super().__init__(Scene, "particles", 1280, 720, target_fps=0, fps_in_title=True)
 
         self.panning = False
         self.last_mouse_pos = glm.vec2()

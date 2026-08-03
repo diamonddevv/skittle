@@ -115,7 +115,7 @@ void main() {
         self._samplers: list[moderngl.Texture] = []
         self._build_use_sampler_textures(sampler_paths)
 
-        vertices, indices = skittle.render.Mesh.uv_quad(2, 2)
+        vertices, indices = skittle.render.OldMesh.uv_quad(2, 2)
         self._vbo = ctx.buffer(glm.array.from_numbers(glm.float32, *vertices).to_bytes())
         self._ibo = ctx.buffer(glm.array.from_numbers(glm.int32, *indices).to_bytes())
         self._vao = ctx.vertex_array(self._program, [(self._vbo, '2f 2f', 'in_pos', 'in_uv')], index_buffer=self._ibo)

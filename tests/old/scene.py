@@ -5,7 +5,7 @@ import moderngl
 import skittle
 import pygame
 from skittle.render.camera import Camera
-from skittle.render.mesh import Camera
+from skittle.render.oldmesh import Camera
 from skittle.render.pixelfont import TextRenderer
 
 
