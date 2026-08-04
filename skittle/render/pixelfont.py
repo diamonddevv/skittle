@@ -24,7 +24,7 @@ class TextRenderer():
         self.default_glyph_width = default_glyph_width
         self.glyph_widths = glyph_widths
 
-        self.mesh = skittle.render.MultiInstanceSpritesheetQuad(ctx, self.spritesheet)
+        self.mesh = TextRendererMesh(ctx, self.spritesheet)
 
 
     def get_character_width(self, char: str) -> int:
@@ -151,3 +151,12 @@ class TextRenderer():
                 obj.get("default_glyph_width", 0),
                 obj.get("glyph_widths", {}),
             )
+    
+
+class TextRendererMesh():
+    def __init__(self, ctx: moderngl.Context, spritesheet: skittle.resource.Spritesheet) -> None:
+        self.ctx = ctx
+        self.spritesheet = spritesheet
+
+        self._vbo, self._ibo = skittle.render.gl.uv_quad(self.ctx, self.spritesheet.sprite_w, self.spritesheet.sprite_h)
+        self._instance_vbo = self.ctx.buffer()

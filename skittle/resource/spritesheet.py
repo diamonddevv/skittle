@@ -15,7 +15,6 @@ class Spritesheet():
         self.seperation_x = seperation_x
         self.seperation_y = seperation_y
 
-        self._gpu_texture: moderngl.Texture | None = None
 
     def uv(self, cell_x: int, cell_y: int) -> tuple[float, float, float, float]:
         sheet_w, sheet_h = self.surface.size
@@ -31,12 +30,3 @@ class Spritesheet():
         v1 = v0 + px_step_y * self.sprite_h
 
         return u0, v0, u1, v1
-    
-    def texture(self, ctx: moderngl.Context) -> moderngl.Texture:
-        if self._gpu_texture == None:
-            self._gpu_texture = ctx.texture(self.surface.size, 4, pygame.image.tobytes(self.surface, "RGBA"))
-        return self._gpu_texture
-    
-    def release(self):
-        if self._gpu_texture != None:
-            self._gpu_texture.release()
