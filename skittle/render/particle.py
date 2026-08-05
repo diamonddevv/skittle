@@ -14,7 +14,7 @@ class ParticleEmitter():
                  direction_low: float, direction_high: float, 
                  ttl_low: float, ttl_high: float,
                  
-                 mesh: skittle.render.MultiInstanceSpritesheetQuad,
+                 mesh: skittle.render.meshes.MultiInstanceSpritesheetQuad,
                  sprite_cells: list[tuple[int, int]],
 
                  acceleration_low: float = 0, acceleration_high: float = 0,
@@ -118,5 +118,5 @@ class ParticleInstance():
         self.ttl = ttl
         self.acceleration = acceleration
 
-    def to_instance_data(self) -> skittle.render.MultiInstanceSpritesheetQuad._InstanceData:
+    def to_instance_data(self) -> skittle.render.meshes.MultiInstanceSpritesheetQuad._InstanceData:
         return (self.pos.x, self.pos.y, self.cx, self.cy, self.color, 0, self.scale)

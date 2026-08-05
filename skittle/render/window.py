@@ -48,10 +48,11 @@ class Window():
                 continue
 
             self.ctx.clear()
-            self.post_processor._begin()
+            self.post_processor.begin_frame()
+            self.camera.begin_frame()
             self.draw(self.ctx, self.camera)
-            self.camera.finish()
-            self.post_processor._finish()
+            self.camera.flush()
+            self.post_processor.flush()
             pygame.display.flip()
 
             if self._fps_in_title:

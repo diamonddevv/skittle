@@ -4,6 +4,8 @@ import typing
 import skittle
 import json
 
+from skittle.render.camera import Camera
+
 class TextRenderer():
     def __init__(
             self,
@@ -24,7 +26,7 @@ class TextRenderer():
         self.default_glyph_width = default_glyph_width
         self.glyph_widths = glyph_widths
 
-        self.mesh = TextRendererMesh(ctx, self.spritesheet)
+        self.mesh = skittle.render.TextMesh(ctx, self.spritesheet)
 
 
     def get_character_width(self, char: str) -> int:
@@ -81,9 +83,9 @@ class TextRenderer():
         return (longest_line_width, lines * self.spritesheet.sprite_h)
 
     def render(self, camera: skittle.render.Camera, text: str, pos: glm.vec2, scale: float = 1, rotation_radians: float = 0, color: skittle.color.Color = skittle.color.WHITE, overlay: bool = False):
-        camera.await_completion(lambda cam, ov, mode: self._render_now(
-            cam, text, pos, scale, rotation_radians, color, ov
-            ), overlay, layer=camera.calc_layer(0, overlay))
+        camera.submit(lambda cam: self._render_now(
+            cam, text, pos, scale, rotation_radians, color, overlay
+            ), layer=camera.calc_layer(0, overlay))
 
     def _render_now(self, camera: skittle.render.Camera, text: str, pos: glm.vec2, scale: float = 1, rotation_radians: float = 0, color: skittle.color.Color = skittle.color.WHITE, overlay: bool = False):
         """
@@ -97,7 +99,7 @@ class TextRenderer():
         if self.caps_only:
             text = text.upper()
 
-        inst_data: list[skittle.render.MultiInstanceSpritesheetQuad._InstanceData] = []
+        inst_data: list[skittle.render.meshes.MultiInstanceSpritesheetQuad._InstanceData] = []
 
         width_pos = 0
         line = 0
@@ -152,11 +154,15 @@ class TextRenderer():
                 obj.get("glyph_widths", {}),
             )
     
-
-class TextRendererMesh():
+class TextMesh(skittle.render.Renderable):
     def __init__(self, ctx: moderngl.Context, spritesheet: skittle.resource.Spritesheet) -> None:
         self.ctx = ctx
         self.spritesheet = spritesheet
 
-        self._vbo, self._ibo = skittle.render.gl.uv_quad(self.ctx, self.spritesheet.sprite_w, self.spritesheet.sprite_h)
-        self._instance_vbo = self.ctx.buffer()
+        self._ibuf = skittle.render.InstancedBuffer(self.ctx)
+
+    def _submit_to_camera(self, camera: Camera, overlay: bool):
+        pass
+    
+    def release(self):
+        pass

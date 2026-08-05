@@ -1,3 +1,4 @@
+import skittle
 import moderngl
 from pyglm import glm
 
@@ -31,8 +32,9 @@ class InstancedBuffer():
     def __init__(self, ctx: moderngl.Context) -> None:
         self.ctx = ctx
 
-        self._buf = ctx.buffer()
+        self._buf = ctx.buffer(dynamic=True)
         self._instances = 0
+        self._overshoot = 1.2
         self._instance_size = 0
         self._released = False
 
@@ -42,6 +44,28 @@ class InstancedBuffer():
     def resize(self, instances: int):
         self._instances = instances
 
+    def write(self, data: bytes):
+        self._buf.orphan(self._instances * self._instance_size)
+        self._buf.write(data)
+
+    def update_instance(self, instance_data: bytes, index: int):
+        if len(instance_data) != self._instance_size:
+            raise BufferError(f"data is too long (expected {self._instance_size} bytes, got {len(instance_data)})")
+        self._buf.write(instance_data, index * self._instance_size)
+
+    def get(self) -> moderngl.Buffer:
+        return self._buf
+
     def release(self):
         self._released = True
         self._buf.release()
+
+class Renderable():
+    def draw(self, camera: skittle.render.Camera, overlay: bool = False, layer: int = 0):
+        camera.submit(lambda c: self._submit_to_camera(c, overlay), layer=layer)
+
+    def _submit_to_camera(self, camera: skittle.render.Camera, overlay: bool = False):
+        raise NotImplementedError("renderable did not extend _submit_to_camera")
+    
+    def release(self):
+        pass

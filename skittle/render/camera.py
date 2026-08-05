@@ -4,7 +4,7 @@ import typing
 import skittle
 
 class Camera():
-    type _PaintersAlgorithmCall = typing.Callable[..., typing.Any]
+    type _RenderSubmission = typing.Callable[..., typing.Any]
 
     def __init__(self, frame_width: int, frame_height: int, zoom: float = 1.0) -> None:
         self.frame_width = frame_width
@@ -16,7 +16,7 @@ class Camera():
 
         self._overlay_layer_reserve = 500
 
-        self._painters_algorithm_layers: dict[int, list[tuple[Camera._PaintersAlgorithmCall, int, tuple]]] = {}
+        self._submissions: dict[int, list[Camera._RenderSubmission]] = {}
 
     def projection(self, overlay: bool):
         # the projection controls frame zooming, or in other words, what is in the frame
@@ -56,23 +56,23 @@ class Camera():
             if layer > self._overlay_layer_reserve:
                 skittle.err(f"layers over {self._overlay_layer_reserve} are meant for overlay items")
         return layer
+    
+    def begin_frame(self):
+        pass
 
-    def await_completion(self, function: _PaintersAlgorithmCall, *params, mode: int = moderngl.TRIANGLES, layer: int = 0):
-        """
-        queues an item on a layer for the painters algorithm
-        """
-        l = self._painters_algorithm_layers.get(layer, [])
-        l.append((function, mode, params))
-        self._painters_algorithm_layers[layer] = l
+    def submit(self, submission: _RenderSubmission, layer: int = 0):
+        layr = self._submissions.get(layer, [])
+        layr.append(submission)
+        self._submissions[layer] = layr
 
-    def finish(self):
+    def flush(self):
         """
         complete painter's algorithm, easier way of doing depth
         """
-        for layer in sorted(self._painters_algorithm_layers):
-            for func, mode, params in self._painters_algorithm_layers[layer]:
-                func(self, *params, mode=mode)
-        self._painters_algorithm_layers.clear()
+        for layer in sorted(self._submissions):
+            for submission in self._submissions[layer]:
+                submission(self)
+        self._submissions.clear()
 
     def move(self, x: float, y: float):
         self.position += glm.vec2(-x, y)

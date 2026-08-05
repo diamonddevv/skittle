@@ -45,11 +45,11 @@ class PostProcessor():
         self.ping_fbo, self.ping_tex = self._make_fbo()
         self.pong_fbo, self.pong_tex = self._make_fbo()
 
-    def _begin(self):
+    def begin_frame(self):
         self.scene_fbo.use()
         self.scene_fbo.clear()
 
-    def _finish(self):
+    def flush(self):
         if len(self._effects) == 0: # if nothing just copy and go
             self.ctx.copy_framebuffer(self.ctx.screen, self.scene_fbo)
             return
