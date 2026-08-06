@@ -15,11 +15,13 @@ from skittle import observer
 from skittle import i18n
 from skittle import color
 from skittle import tween
-from skittle import render
 from skittle import input
 from skittle import ui
 from skittle import draw
+from skittle import render
 from skittle import resource
+from skittle import camera
+from skittle import window
 
 __VERSION__: str = "0.0.0"
 

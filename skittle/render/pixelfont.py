@@ -24,7 +24,7 @@ class TextRenderer():
         self.default_glyph_width = default_glyph_width
         self.glyph_widths = glyph_widths
 
-        self.mesh = skittle.render.MultiInstanceSpritesheetQuad(ctx, self.spritesheet)
+        self.mesh = skittle.render.mesh.InstancedSpritesheetMesh(ctx, self.spritesheet)
 
 
     def get_character_width(self, char: str) -> int:
@@ -80,12 +80,12 @@ class TextRenderer():
 
         return (longest_line_width, lines * self.spritesheet.sprite_h)
 
-    def render(self, camera: skittle.render.Camera, text: str, pos: glm.vec2, scale: float = 1, rotation_radians: float = 0, color: skittle.color.Color = skittle.color.WHITE, overlay: bool = False):
-        camera.submit(lambda cam, ov, mode: self._render_now(
-            cam, text, pos, scale, rotation_radians, color, ov
-            ), overlay, layer=camera.calc_layer(0, overlay))
+    def render(self, camera: skittle.camera.Camera, text: str, pos: glm.vec2, scale: float = 1, rotation_radians: float = 0, color: skittle.color.Color = skittle.color.WHITE, overlay: bool = False):
+        camera.submit(lambda: self._render_now(
+            camera, text, pos, scale, rotation_radians, color, overlay
+            ), layer=camera.calc_layer(0, overlay))
 
-    def _render_now(self, camera: skittle.render.Camera, text: str, pos: glm.vec2, scale: float = 1, rotation_radians: float = 0, color: skittle.color.Color = skittle.color.WHITE, overlay: bool = False):
+    def _render_now(self, camera: skittle.camera.Camera, text: str, pos: glm.vec2, scale: float = 1, rotation_radians: float = 0, color: skittle.color.Color = skittle.color.WHITE, overlay: bool = False):
         """
         call `render` instead. this function exists to hack around the fact a single mesh could only draw one piece of text per frame, so instead they're indiviudally batched on a layer of abstraction higher than the mesh itself
         """
@@ -97,7 +97,7 @@ class TextRenderer():
         if self.caps_only:
             text = text.upper()
 
-        inst_data: list[skittle.render.MultiInstanceSpritesheetQuad._InstanceData] = []
+        inst_data: list[skittle.render.mesh.InstancedSpritesheetMesh._InstanceData] = []
 
         width_pos = 0
         line = 0
@@ -108,22 +108,20 @@ class TextRenderer():
                 width_pos = 0
             else:
                 cx, cy = self.get_codepoint_pos(char)
-                width = self.get_character_width(char)
-                scale_vec = glm.vec2(scale)
+                width = self.get_character_width(char) * scale
                 inst_data.append((
                     width_pos + self.spritesheet.sprite_w / 2,
                     -line * self.spritesheet.sprite_h - self.spritesheet.sprite_h / 2,
                     cx, cy,
                     color,
                     rotation_radians,
-                    scale_vec
+                    glm.vec2(scale)
                 ))
                 width_pos += width
 
         self.mesh.bake_instances(inst_data)
 
-        self.mesh.position = pos / scale
-        self.mesh._render_now(camera, overlay)
+        self.mesh._render_now(camera, pos, overlay=overlay)
 
     def release(self):
         self.mesh.release()
@@ -131,7 +129,7 @@ class TextRenderer():
 
     @staticmethod
     def from_json(ctx: moderngl.Context, json_path: str) -> TextRenderer:
-        import os
+    
         with open(json_path, "rb") as f:
             obj: dict[str, typing.Any] = json.load(f)
         
@@ -143,11 +141,11 @@ class TextRenderer():
                 sprite_h=obj.get("sprite_height", 16),
                 sep_x=obj.get("seperation_x", 0),
                 sep_y=obj.get("seperation_y", 0),
-                ),
-                ''.join(obj["glyphs"]),
-                obj["rows"],
-                obj["columns"],
-                obj.get("caps_only", False),
-                obj.get("default_glyph_width", 0),
-                obj.get("glyph_widths", {}),
-            )
+            ),
+            ''.join(obj["glyphs"]),
+            obj["rows"],
+            obj["columns"],
+            obj.get("caps_only", False),
+            obj.get("default_glyph_width", 0),
+            obj.get("glyph_widths", {}),
+        )

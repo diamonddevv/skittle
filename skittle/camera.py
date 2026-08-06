@@ -4,7 +4,7 @@ import typing
 import skittle
 
 class Camera():
-    type _PaintersAlgorithmRender = typing.Callable[[Camera, bool, int], typing.Any]
+    type _Submission = typing.Callable[[], typing.Any]
 
     def __init__(self, width: int, height: int, zoom: float = 1.0) -> None:
         self.width = width
@@ -16,7 +16,7 @@ class Camera():
 
         self._overlay_layer_reserve = 500
 
-        self._painters_algorithm_layers: dict[int, list[tuple[Camera._PaintersAlgorithmRender, bool, int]]] = {}
+        self._submissions: dict[int, list[Camera._Submission]] = {}
 
     def projection(self, overlay: bool):
         half_w = self.width / 2 / (self.zoom if not overlay else 1)
@@ -52,13 +52,13 @@ class Camera():
                 skittle.err(f"layers over {self._overlay_layer_reserve} are meant for overlay items")
         return layer
 
-    def submit(self, function: _PaintersAlgorithmRender, overlay: bool, mode: int = moderngl.TRIANGLES, layer: int = 0):
+    def submit(self, function: _Submission, layer: int = 0):
         """
         queues an item on a layer for the painters algorithm
         """
-        l = self._painters_algorithm_layers.get(layer, [])
-        l.append((function, overlay, mode))
-        self._painters_algorithm_layers[layer] = l
+        l = self._submissions.get(layer, [])
+        l.append(function)
+        self._submissions[layer] = l
 
     def begin_frame(self):
         pass
@@ -67,10 +67,10 @@ class Camera():
         """
         complete painter's algorithm, easier way of doing depth
         """
-        for layer in sorted(self._painters_algorithm_layers):
-            for func, overlay, mode in self._painters_algorithm_layers[layer]:
-                func(self, overlay, mode)
-        self._painters_algorithm_layers.clear()
+        for layer in sorted(self._submissions):
+            for func in self._submissions[layer]:
+                func()
+        self._submissions.clear()
 
 
     def set_position(self, x: float, y: float):

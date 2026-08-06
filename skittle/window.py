@@ -29,7 +29,7 @@ class Window():
         pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MINOR_VERSION, skittle.__GLSL_MINOR__)
         skittle.draw._Meshes._init(self.ctx)
 
-        self.camera = skittle.render.Camera(width, height)
+        self.camera = skittle.camera.Camera(width, height)
         self.post_processor = skittle.render.PostProcessor(self.ctx, width, height)
         self.scene_manager = skittle.scene.SceneManager(self.ctx, self.camera, initial_scene, self)
 
@@ -61,10 +61,10 @@ class Window():
                 pygame.display.set_caption(self.title)
             dt = self._clock.tick(self.target_fps) / 1000
 
-    def update(self, dt: float, camera: skittle.render.Camera):
+    def update(self, dt: float, camera: skittle.camera.Camera):
         self.scene_manager.update(dt, camera)
 
-    def draw(self, ctx: moderngl.Context, camera: skittle.render.Camera):
+    def draw(self, ctx: moderngl.Context, camera: skittle.camera.Camera):
         self.scene_manager.draw(ctx, camera)
 
     def event_handle(self):

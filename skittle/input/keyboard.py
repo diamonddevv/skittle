@@ -1,13 +1,13 @@
 import pygame
 import skittle
 
-def buttons_down() -> pygame.key.ScancodeWrapper:
+def keys_down() -> pygame.key.ScancodeWrapper:
     return pygame.key.get_pressed()
 
-def buttons_click() -> pygame.key.ScancodeWrapper:
+def keys_click() -> pygame.key.ScancodeWrapper:
     return pygame.key.get_just_pressed()
 
-def buttons_released() -> pygame.key.ScancodeWrapper:
+def keys_released() -> pygame.key.ScancodeWrapper:
     return pygame.key.get_just_released()
 
 class TextInput():

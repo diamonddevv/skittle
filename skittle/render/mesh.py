@@ -1,13 +1,11 @@
-from moderngl import TRIANGLES
+
 import pygame
 import moderngl
 import skittle
 import numpy
 from pyglm import glm
 
-from skittle.render.camera import Camera
-
-class Mesh():
+class TextureMesh():
     VERTEX: str = """
 #version 330 core
 
@@ -25,9 +23,8 @@ const float PI = 3.14159;
 
 vec2 rotate(vec2 uv, float angle)
 {
-    angle += PI/2;
-	mat2 rotation = mat2(vec2(sin(angle), -cos(angle)),
-						vec2(cos(angle), sin(angle)));
+	mat2 rotation = mat2(vec2(cos(angle), -sin(angle)),
+						 vec2(sin(angle), cos(angle)));
 	
 	uv -= vec2(0.5);
 	uv = uv * rotation;
@@ -41,134 +38,7 @@ void main() {
     gl_Position = u_proj_view * vec4(world_pos, 0.0, 1.0);
 }
     """
-        
     FRAGMENT: str = """
-#version 330 core
-
-in vec2 v_uv;
-out vec4 fragColor;
-
-uniform vec4 u_tint;
-
-void main() {
-    fragColor = u_tint;
-}
-"""
-
-    def __init__(self, 
-                 ctx: moderngl.Context,
-                 vertices: list[float],
-                 format: str = "2f 2f",
-                 attribute_names: list[str] = ['in_vertex_pos', 'in_uv'],
-                 indices: list[int] | None = None,
-                 vertex: str = VERTEX,
-                 fragment: str = FRAGMENT,
-                 build_vao: bool = True,
-                 ) -> None:
-        self._ctx = ctx
-        self._program = ctx.program(vertex, fragment)
-
-        if build_vao:
-            self._vbo = ctx.buffer(glm.array.from_numbers(glm.float32, *vertices).to_bytes())
-            self._ibo = ctx.buffer(glm.array.from_numbers(glm.int32, *indices).to_bytes()) if indices != None else None
-            self._vao = ctx.vertex_array(self._program, [(self._vbo, format, *attribute_names)], index_buffer=self._ibo)
-        
-        self._instances = -1
-        self._layers = 999
-
-        self.position = glm.vec2(0, 0)
-        self.scale: glm.vec2 = glm.vec2(1.0)
-        self.color = skittle.color.WHITE
-        self.layer: int = 0
-        self.rotation_radians: float = 0.0
-
-    def _render_now(self, camera: skittle.render.Camera, overlay: bool = False, mode: int = moderngl.TRIANGLES):
-        
-        self.uniform('u_proj_view', camera.proj_view_mat(overlay).to_bytes())
-        self.uniform('u_position', (self.position.x, -self.position.y))
-        self.uniform('u_scale', (self.scale.x, self.scale.y))
-        self.uniform('u_tint', (self.color.r / 255, self.color.g / 255, self.color.b / 255, self.color.a / 255))
-        self.uniform('u_rot_rad', self.rotation_radians)
-
-        self._vao.render(mode, instances=self._instances)
-
-    
-
-    def render(self, camera: skittle.render.Camera, overlay: bool = False, mode: int = moderngl.TRIANGLES, no_cam: bool = False):
-    
-        if no_cam:
-            self._render_now(camera, overlay, mode)
-        else:
-            layer = camera.calc_layer(self.layer, overlay)
-            camera.submit(self._render_now, overlay, mode, layer)
-
-    def release(self):
-        self._vbo.release()
-        if self._ibo != None:
-            self._ibo.release()
-        self._vao.release()
-
-    def uniform(self, key: str, value):
-        if key in self._program:
-            if type(value) == bytes:
-                self._program[key].write(value) # type: ignore
-            else:
-                self._program[key].value = value # type: ignore
-
-    def read_uniform(self, key: str):
-        return self._program[key]
-
-    @staticmethod
-    def uv_quad(width: int, height: int, u0: float = 0.0, v0: float = 0.0, u1: float = 1.0, v1: float = 1.0) -> tuple[list[float], list[int]]:
-        hw = width / 2
-        hh = height / 2
-
-        vertices = [
-                    -hw,  hh, u0, v0, # top left
-                     hw,  hh, u1, v0, # top right
-                     hw, -hh, u1, v1, # bottom right
-                    -hw, -hh, u0, v1, # bottom left
-                    ]
-        indices = [
-            0, 1, 2,
-            2, 3, 0
-            ]
-
-        return vertices, indices
-
-class QuadMesh(Mesh):
-    QUADMESH_FRAGMENT: str = """
-#version 330 core
-
-in vec2 v_uv;
-out vec4 fragColor;
-
-uniform vec4 u_tint;
-
-void main() {
-    fragColor = u_tint;
-}
-"""
-
-    def __init__(self, ctx: moderngl.Context, w: int, h: int, vertex: str = Mesh.VERTEX, fragment: str = QUADMESH_FRAGMENT) -> None:
-        vertices, indices = Mesh.uv_quad(w, h)
-        
-        super().__init__(
-            ctx, 
-            vertices,
-            indices=indices,
-            vertex=vertex,
-            fragment=fragment
-        )
-
-        self.outline_col: skittle.color.Color | None = None
-        self.outline_width: float = 0.0
-
-
-
-
-class TextureMesh(Mesh):
-    TEXTURE_FRAGMENT: str = """
 #version 330 core
 
 in vec2 v_uv;
@@ -182,57 +52,110 @@ void main() {
 }
 """
 
-    def __init__(self, ctx: moderngl.Context, w: int, h: int, u0: float, v0: float, u1: float, v1: float, texture: pygame.Surface, vertex: str = Mesh.VERTEX, fragment: str = TEXTURE_FRAGMENT) -> None:
-        vertices, indices = Mesh.uv_quad(w, h, u0, v0, u1, v1)
-        
-        super().__init__(
-            ctx, 
-            vertices,
-            indices=indices,
-            vertex=vertex,
-            fragment=fragment
-        )
-        
-        self.texture: moderngl.Texture
-        self.load_texture(texture) 
+    def __init__(self, 
+                 ctx: moderngl.Context,
+                 texture: pygame.Surface,
+                 w: int = 1,
+                 h: int = 1,
+                 u0: float = 0.0,
+                 v0: float = 0.0,
+                 u1: float = 1.0,
+                 v1: float = 1.0,
+                 vertex: str = VERTEX,
+                 fragment: str = FRAGMENT,
+                 ) -> None:
+        self._ctx = ctx
+        self._program = ctx.program(vertex, fragment)
 
-    def load_texture(self, surface: pygame.Surface, filter: int = moderngl.NEAREST):
-        data = pygame.image.tobytes(surface, "RGBA")
-        self.texture = self._ctx.texture(surface.get_size(), 4, data)
-        self.texture.filter = (filter, filter)
-    
-    def _render_now(self, camera: skittle.render.Camera, overlay: bool = False, mode: int = moderngl.TRIANGLES):
-        self.texture.use(0)
+        vertices, indices = skittle.render.gl.uv_quad(w, h, u0, v0, u1, v1)
+        self._vbo = ctx.buffer(vertices)
+        self._ibo = ctx.buffer(indices)
+        self._vao = ctx.vertex_array(self._program, [(self._vbo, "2f 2f", 'in_vertex_pos', 'in_uv')], index_buffer=self._ibo)
+        
+        self._render_instances = -1
+
+        self._texture = skittle.render.gl.surf_texture(self._ctx, texture)
+        self._size = glm.vec2(texture.width, texture.height)
+
+    def _render_now(self, camera: skittle.camera.Camera, 
+                    position: glm.vec2, 
+                    scale: glm.vec2 = glm.vec2(1.0), 
+                    color: skittle.color.Color = skittle.color.WHITE, 
+                    rotation: float = 0.0, 
+                    overlay: bool = False, 
+                    mode: int = moderngl.TRIANGLES):
+        
+        self._texture.use(0)
+
+        self.uniform('u_proj_view', camera.proj_view_mat(overlay).to_bytes())
+        self.uniform('u_position', (position.x, -position.y))
+        self.uniform('u_scale', (scale.x, scale.y))
+        self.uniform('u_tint', (color.r / 255, color.g / 255, color.b / 255, color.a / 255))
+        self.uniform('u_rot_rad', rotation)
         self.uniform('u_texture', 0)
-        return super()._render_now(camera, overlay, mode)
+
+        self._vao.render(mode, instances=self._render_instances)
+
     
+
+    def render(self, camera: skittle.camera.Camera, 
+                    position: glm.vec2, 
+                    scale: glm.vec2 = glm.vec2(1.0), 
+                    color: skittle.color.Color = skittle.color.WHITE, 
+                    rotation: float = 0.0, 
+                    layer: int = 0,
+                    overlay: bool = False, 
+                    mode: int = moderngl.TRIANGLES,
+                    ignore_camera: bool = False):
+    
+        if ignore_camera:
+            self._render_now(camera, position, scale, color, rotation, overlay, mode)
+        else:
+            layer = camera.calc_layer(layer, overlay)
+            camera.submit(lambda: self._render_now(camera, position, scale, color, rotation, overlay, mode), layer)
+
     def release(self):
-        super().release()
-        self.texture.release()
+        self._vbo.release()
+        if self._ibo != None:
+            self._ibo.release()
+        self._vao.release()
 
-class SpriteQuad(TextureMesh):
-    def __init__(self, ctx: moderngl.Context, texture: pygame.Surface, vertex: str = Mesh.VERTEX, fragment: str = TextureMesh.TEXTURE_FRAGMENT) -> None:
-        super().__init__(ctx, texture.width, texture.height, 0, 0, 1, 1, texture, vertex, fragment)
+        if self._texture != None:
+            self._texture.release()
 
-class SpritesheetQuad(TextureMesh):
-    def __init__(self, ctx: moderngl.Context, spritesheet: skittle.resource.Spritesheet, frame: tuple[int, int] = (0, 0), vertex: str = Mesh.VERTEX, fragment: str = TextureMesh.TEXTURE_FRAGMENT) -> None:
+        self._program.release()
+
+    def uniform(self, key: str, value):
+        if key in self._program:
+            if type(value) == bytes:
+                self._program[key].write(value) # type: ignore
+            else:
+                self._program[key].value = value # type: ignore
+
+    def read_uniform(self, key: str):
+        return self._program[key]
+
+
+class SpritesheetMesh(TextureMesh):
+    def __init__(self, ctx: moderngl.Context, spritesheet: skittle.resource.Spritesheet, frame: tuple[int, int] = (0, 0), vertex: str = TextureMesh.VERTEX, fragment: str = TextureMesh.FRAGMENT) -> None:
         self.frame = frame
         u0, v0, u1, v1 = spritesheet.uv(*self.frame)
 
-        super().__init__(ctx, spritesheet.sprite_w, spritesheet.sprite_h, u0, v0, u1, v1, spritesheet.surface, vertex, fragment)
+        super().__init__(ctx, spritesheet.surface, spritesheet.sprite_w, spritesheet.sprite_h, u0, v0, u1, v1, vertex, fragment)
 
         self.spritesheet = spritesheet
+        self._size = glm.vec2(self.spritesheet.sprite_w, self.spritesheet.sprite_h)
 
     def set_sprite(self, frame: tuple[int, int]):
         if frame == self.frame:
             return
         u0, v0, u1, v1 = self.spritesheet.uv(*frame)
-        vertices, _ = Mesh.uv_quad(self.spritesheet.sprite_w, self.spritesheet.sprite_h, u0, v0, u1, v1)
-        self._vbo.write(glm.array.from_numbers(glm.int32, *vertices).to_bytes())
+        vertices, _ = skittle.render.gl.uv_quad(self.spritesheet.sprite_w, self.spritesheet.sprite_h, u0, v0, u1, v1)
+        self._vbo.write(vertices)
         self.frame = frame
 
-class MultiInstanceSpritesheetQuad(TextureMesh):
-    PER_INSTANCE_VERTEX: str = """
+class InstancedSpritesheetMesh(TextureMesh):
+    VERTEX: str = """
 #version 330 core
 
 in vec2 in_vertex_pos;
@@ -275,8 +198,7 @@ void main() {
     gl_Position = u_proj_view * vec4(world_pos, 0.0, 1.0);
 }
     """
-
-    PER_INSTANCE_FRAGMENT: str = """
+    FRAGMENT: str = """
 #version 330 core
 
 in vec2 v_uv;
@@ -304,37 +226,31 @@ void main() {
     FLOAT_COUNT: int = 13
         
 
-    def __init__(self, ctx: moderngl.Context, spritesheet: skittle.resource.Spritesheet, vertex: str = PER_INSTANCE_VERTEX, fragment: str = PER_INSTANCE_FRAGMENT) -> None:
-        super().__init__(ctx, spritesheet.sprite_w, spritesheet.sprite_h, 0, 0, 1, 1, spritesheet.surface, vertex, fragment)
+    def __init__(self, ctx: moderngl.Context, spritesheet: skittle.resource.Spritesheet, vertex: str = VERTEX, fragment: str = FRAGMENT) -> None:
+        super().__init__(ctx, spritesheet.surface, spritesheet.sprite_w, spritesheet.sprite_h, 0, 0, 1, 1, vertex, fragment)
         self.spritesheet = spritesheet
-
-        # need to remake the vao
-        self._vao.release()
+        self._size = glm.vec2(self.spritesheet.sprite_w, self.spritesheet.sprite_h)
 
         # make new vbo and instanced vao
-        self._instances = 0
-        self._reserve = self.build_vao_vbo(500)
+        self._ivbo = skittle.render.gl.InstancedBuffer(ctx)
+        self._ivbo.set_instance_size(13*4)
+        
+        self.build_vao_vbo()
 
-    def build_vao_vbo(self, reserve: int = 500):
-        if hasattr(self, "instance_vbo"): self.instance_vbo.release()
+    def build_vao_vbo(self):
         if hasattr(self, "_vao"): self._vao.release()
-
-        instance_size = MultiInstanceSpritesheetQuad.FLOAT_COUNT * 4
-
-        self.instance_vbo = self._ctx.buffer(reserve=instance_size * reserve, dynamic=True)
 
         self._vao = self._ctx.vertex_array(self._program, [
             (self._vbo, "2f 2f", 'in_vertex_pos', 'in_uv'),
-            (self.instance_vbo, "2f 2f 2f 4f f 2f /i", 
+            (self._ivbo.get(), "2f 2f 2f 4f f 2f /i", 
              "in_instance_pos", "in_instance_uv_offset", 
              "in_instance_uv_scale", "in_instance_col",
              "in_instance_rotation", "in_instance_scale")
         ], index_buffer=self._ibo)
 
-        return reserve
 
     def bake_instances(self, instances: list[_InstanceData]):
-        data = numpy.empty((len(instances), MultiInstanceSpritesheetQuad.FLOAT_COUNT), dtype=numpy.float32)
+        data = numpy.empty((len(instances), 13), dtype=numpy.float32)
 
 
         for i, (x, y, cx, cy, col, rot, scale) in enumerate(instances):
@@ -349,13 +265,11 @@ void main() {
                 scale.x, scale.y,
             ]
 
-        self._instances = len(instances)
-
-        if len(instances) > self._reserve:
-            self._reserve = self.build_vao_vbo(int(len(instances) * 1.2))
+        self._ivbo.resize(len(instances))
         
-        self.instance_vbo.write(data.tobytes())
+        self._ivbo.write(data.tobytes())
 
-    def _render_now(self, camera: Camera, overlay: bool = False, mode: int = moderngl.TRIANGLES):
-        if self._instances > 0:
-            return super()._render_now(camera, overlay, mode)
+
+    def _render_now(self, camera: skittle.camera.Camera, position: glm.vec2, scale: glm.vec2 = glm.vec2(1), color: skittle.color.Color = skittle.color.WHITE, rotation: float = 0, overlay: bool = False, mode: int = moderngl.TRIANGLES):
+        if self._render_instances > 0:
+            return super()._render_now(camera, position, scale, color, rotation, overlay, mode)

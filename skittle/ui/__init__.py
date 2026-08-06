@@ -12,10 +12,10 @@ class Element():
         self.mouse_over = False
         self.collision_layer = 0
 
-    def draw(self, camera: skittle.render.Camera):
+    def draw(self, camera: skittle.camera.Camera):
         pass
 
-    def update(self, dt: float, camera: skittle.render.Camera):
+    def update(self, dt: float, camera: skittle.camera.Camera):
         self._update_collision()
 
     def click(self):
