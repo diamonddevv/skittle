@@ -1,4 +1,5 @@
 import skittle
+import pygame
 import moderngl
 from pyglm import glm
 
@@ -28,13 +29,15 @@ def uv_quad(ctx: moderngl.Context, w: int = 1, h: int = 1) -> tuple[moderngl.Buf
         ctx.buffer(glm.array.from_numbers(glm.int32, indices).to_bytes())
         )
 
+def surf_texture(ctx: moderngl.Context, surface: pygame.Surface) -> moderngl.Texture:
+    return ctx.texture(surface.size, 4, pygame.image.tobytes(surface, "RGBA"))
+
 class InstancedBuffer():
     def __init__(self, ctx: moderngl.Context) -> None:
         self.ctx = ctx
 
         self._buf = ctx.buffer(dynamic=True)
         self._instances = 0
-        self._overshoot = 1.2
         self._instance_size = 0
         self._released = False
 
@@ -59,13 +62,3 @@ class InstancedBuffer():
     def release(self):
         self._released = True
         self._buf.release()
-
-class Renderable():
-    def draw(self, camera: skittle.render.Camera, overlay: bool = False, layer: int = 0):
-        camera.submit(lambda c: self._submit_to_camera(c, overlay), layer=layer)
-
-    def _submit_to_camera(self, camera: skittle.render.Camera, overlay: bool = False):
-        raise NotImplementedError("renderable did not extend _submit_to_camera")
-    
-    def release(self):
-        pass

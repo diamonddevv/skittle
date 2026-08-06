@@ -1,9 +1,11 @@
-import time
+from moderngl import TRIANGLES
 import pygame
 import moderngl
 import skittle
 import numpy
 from pyglm import glm
+
+from skittle.render.camera import Camera
 
 class Mesh():
     VERTEX: str = """
@@ -83,7 +85,6 @@ void main() {
     def _render_now(self, camera: skittle.render.Camera, overlay: bool = False, mode: int = moderngl.TRIANGLES):
         
         self.uniform('u_proj_view', camera.proj_view_mat(overlay).to_bytes())
-        self.uniform('u_time', time.perf_counter())
         self.uniform('u_position', (self.position.x, -self.position.y))
         self.uniform('u_scale', (self.scale.x, self.scale.y))
         self.uniform('u_tint', (self.color.r / 255, self.color.g / 255, self.color.b / 255, self.color.a / 255))
@@ -99,7 +100,7 @@ void main() {
             self._render_now(camera, overlay, mode)
         else:
             layer = camera.calc_layer(self.layer, overlay)
-            camera.await_completion(self._render_now, overlay, mode, layer)
+            camera.submit(self._render_now, overlay, mode, layer)
 
     def release(self):
         self._vbo.release()
@@ -143,25 +144,14 @@ in vec2 v_uv;
 out vec4 fragColor;
 
 uniform vec4 u_tint;
-uniform vec2 u_scale;
-uniform float u_time;
-uniform vec4 u_outline_color;
-uniform float u_outline_width;
 
 void main() {
-
-    vec2 width = u_outline_width / u_scale;
-
-    if (v_uv.x < width.x || v_uv.x > 1-width.x || v_uv.y < width.y || v_uv.y > 1-width.y)
-    {
-        fragColor = u_outline_color;
-    }
-    else fragColor = u_tint;
+    fragColor = u_tint;
 }
 """
 
-    def __init__(self, ctx: moderngl.Context, vertex: str = Mesh.VERTEX, fragment: str = QUADMESH_FRAGMENT) -> None:
-        vertices, indices = Mesh.uv_quad(1, 1)
+    def __init__(self, ctx: moderngl.Context, w: int, h: int, vertex: str = Mesh.VERTEX, fragment: str = QUADMESH_FRAGMENT) -> None:
+        vertices, indices = Mesh.uv_quad(w, h)
         
         super().__init__(
             ctx, 
@@ -172,18 +162,9 @@ void main() {
         )
 
         self.outline_col: skittle.color.Color | None = None
-        self.outline_width = 5.0
+        self.outline_width: float = 0.0
 
-    def _render_now(self, camera: skittle.render.Camera, overlay: bool = False, mode: int = moderngl.TRIANGLES):
-        if self.outline_col != None:
-            self.uniform("u_outline_color", (
-                self.outline_col.r/255, 
-                self.outline_col.g/255, 
-                self.outline_col.b/255, 
-                self.outline_col.a/255
-                ))
-            self.uniform("u_outline_width", self.outline_width)
-        super()._render_now(camera, overlay, mode)
+
 
 
 class TextureMesh(Mesh):
@@ -375,7 +356,6 @@ void main() {
         
         self.instance_vbo.write(data.tobytes())
 
-    def _render_now(self, camera: skittle.render.Camera, overlay: bool = False, mode: int = moderngl.TRIANGLES):
+    def _render_now(self, camera: Camera, overlay: bool = False, mode: int = moderngl.TRIANGLES):
         if self._instances > 0:
             return super()._render_now(camera, overlay, mode)
-        
