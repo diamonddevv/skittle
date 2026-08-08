@@ -21,7 +21,6 @@ def radf_to_vec(radians: float) -> glm.vec2:
     radians += glm.half_pi()
     return glm.vec2(glm.cos(radians), glm.sin(radians))
 
-
 class Rect():
     def __init__(self, x: float, y: float, w: float, h: float) -> None:
         self.x = x

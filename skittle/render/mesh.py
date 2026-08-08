@@ -1,4 +1,4 @@
-
+import typing
 import pygame
 import moderngl
 import skittle
@@ -234,6 +234,8 @@ void main() {
         # make new vbo and instanced vao
         self._ivbo = skittle.render.gl.InstancedBuffer(ctx)
         self._ivbo.set_instance_size(13*4)
+
+        self._instance_data: list[InstancedSpritesheetMesh._InstanceData] = []
         
         self.build_vao_vbo()
 
@@ -248,28 +250,43 @@ void main() {
              "in_instance_rotation", "in_instance_scale")
         ], index_buffer=self._ibo)
 
+    def update_instance(self, idx: int, update: typing.Callable[[_InstanceData], _InstanceData]):
+        self._instance_data[idx] = update(self._instance_data[idx])
+        self._ivbo.update_instance(self.instance_data_to_bytes(self._instance_data[idx]), idx)
 
-    def bake_instances(self, instances: list[_InstanceData]):
-        data = numpy.empty((len(instances), 13), dtype=numpy.float32)
+    def bake_instances(self, instances: list[_InstanceData] | None = None):
+        if instances is not None:
+            self._instance_data = instances
 
+        self._ivbo.clear()
+        self._ivbo.resize(len(self._instance_data))
+        for i, instance in enumerate(self._instance_data):
+            self._ivbo.update_instance(self.instance_data_to_bytes(instance), i)
 
-        for i, (x, y, cx, cy, col, rot, scale) in enumerate(instances):
-            u0, v0, u1, v1 = self.spritesheet.uv(cx, cy)
-
-            data[i] = [
-                x, y, 
-                u0, v0, 
-                u1-u0, v1-v0,
-                col.r/255, col.g/255, col.b/255, col.a/255,
-                rot,
-                scale.x, scale.y,
-            ]
-
-        self._ivbo.resize(len(instances))
         
-        self._ivbo.write(data.tobytes())
+        self.build_vao_vbo()
 
 
     def _render_now(self, camera: skittle.camera.Camera, position: glm.vec2, scale: glm.vec2 = glm.vec2(1), color: skittle.color.Color = skittle.color.WHITE, rotation: float = 0, overlay: bool = False, mode: int = moderngl.TRIANGLES):
-        if self._render_instances > 0:
+        if self._ivbo._instances > 0:
+            self._render_instances = self._ivbo._instances
             return super()._render_now(camera, position, scale, color, rotation, overlay, mode)
+    
+    def instance_data_to_bytes(self, instance: _InstanceData) -> bytes:
+        data = numpy.empty((1, 13), dtype=numpy.float32)
+        (x, y, cx, cy, col, rot, scale) = instance
+        u0, v0, u1, v1 = self.spritesheet.uv(cx, cy)
+
+        data[0] = [
+            x, y, 
+            u0, v0, 
+            u1-u0, v1-v0,
+            col.r/255, col.g/255, col.b/255, col.a/255,
+            rot,
+            scale.x, scale.y,
+        ]
+
+        return data.tobytes()
+    
+    def indexes(self) -> range:
+        return range(len(self._instance_data))

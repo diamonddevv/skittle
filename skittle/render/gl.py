@@ -45,6 +45,9 @@ class InstancedBuffer():
         self._assert_not_released()
         self._instance_size = nbytes
 
+    def clear(self):
+        self._buf.clear()
+
     def resize(self, instances: int):
         if instances > self._instances:
             self._assert_not_released()
@@ -61,7 +64,7 @@ class InstancedBuffer():
         self._buf.write(instance_data, index * self._instance_size)
 
     def write(self, data: bytes):
-        self._assert_not_released
+        self._assert_not_released()
         self._buf.write(data)
 
     def get(self) -> moderngl.Buffer:

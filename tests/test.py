@@ -10,8 +10,9 @@ from skittle.camera import Camera
 
 class Test(skittle.window.Window):
     def __init__(self) -> None:
-        super().__init__(None, "test", 500, 500, target_fps=0, fps_in_title=True)
-        
+        super().__init__(None, "test", 500, 500, target_fps=0, fps_in_title=False)
+        self.age = 0.0
+
         self.hearts = skittle.resource.spritesheet("tests/asset/spritesheet.png")
         self.glyphxel = skittle.render.TextRenderer.from_json(self.ctx, "tests/asset/glyphxel_definition.json")
 
@@ -24,22 +25,25 @@ class Test(skittle.window.Window):
         self.sprite_idx_x = 0
         self.sprite_idx_y = 0
 
-        self.many_hearts.bake_instances([(x * 16, y * 16, random.randint(0, 2), random.randint(0, 7), skittle.color.WHITE, random.uniform(0, glm.two_pi()), glm.vec2(random.uniform(1/2, 2))) for x in range(500) for y in range(250)])
+        self.many_hearts.bake_instances([
+            (x * 32, -y * 32, random.randint(0, 2), random.randint(0, 7), skittle.color.WHITE, random.uniform(0, glm.two_pi()), glm.vec2(random.uniform(1/2, 2))) 
+            for x in range(50) for y in range(50)
+            ])
 
 
     def draw(self, ctx: moderngl.Context, camera: skittle.camera.Camera):
         
 
-        self.glyphxel.render(camera, "hello, world!", glm.vec2(0, 0))
-        self.glyphxel.render(camera, "scaled", glm.vec2(0, 100), scale=2)
-        self.glyphxel.render(camera, "fixed", glm.vec2(20, 20), overlay=True, color=skittle.color.CYAN)
+        self.glyphxel.render(camera, f"individually animated instances: {self.many_hearts._render_instances} | framerate: {self._clock.get_fps():.0f} fps", glm.vec2(80, 0), scale=5)
 
-        self.heart_mesh.render(camera, position=glm.vec2(0, 0))
         self.many_hearts.render(camera, position=glm.vec2(100, 100))
 
+
+
     def update(self, dt: float, camera: Camera):
-        if skittle.input.keys_click()[skittle.input.KEY_SPACE]:
-            self.heart_mesh.set_sprite((3, 0) if self.heart_mesh.frame == (0, 0) else (0, 0))
+        self.age += dt
+        for i in self.many_hearts.indexes():
+            self.many_hearts.update_instance(i, lambda old: (old[0], old[1], old[2], old[3], old[4], old[5] + dt * glm.quarter_pi() * 5 * glm.sin(hash(str(i))), glm.vec2(max(1.5 * glm.sin(hash(str(i))), 0) + 1)))
 
     def handle_zoom(self, event: pygame.Event):
         if event.y == 0:
