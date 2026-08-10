@@ -321,12 +321,12 @@ void main() {
 
 in vec2 v_vertex;
 
-uniform vec4 u_line_color = vec4(1.0);
+uniform vec4 u_color = vec4(1.0);
 
 out vec4 fragColor;
 
 void main() {
-    fragColor = u_line_color;
+    fragColor = u_color;
 }
 
 """
@@ -341,12 +341,17 @@ void main() {
         self._closed = False
         self.rebake([glm.vec2(0.0)], closed=False)
 
-    def _render_now(self, camera: skittle.camera.Camera, color: skittle.color.Color, overlay: bool = False):
+    def _render_now(self, camera: skittle.camera.Camera, color: skittle.color.Color, overlay: bool = False, fill: skittle.color.Color | None = None):
         if self._vao == None:
             raise ValueError("line vertex array was none!")
 
         self.uniform('u_proj_view', camera.proj_view_mat(overlay).to_bytes())
-        self.uniform('u_line_color', color)
+
+        if fill != None:
+            self.uniform('u_color', fill)
+            self._vao.render(mode=moderngl.TRIANGLE_FAN)
+
+        self.uniform('u_color', color)
         self._vao.render(mode=(moderngl.LINE_LOOP if self._closed else moderngl.LINE_STRIP))
 
     def rebake(self, points: list[glm.vec2], closed: bool = False):

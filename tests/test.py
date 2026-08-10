@@ -41,12 +41,11 @@ class Test(skittle.window.Window):
 
         #self.many_hearts.render(camera, position=glm.vec2(100, 100))
         
-        skittle.draw.line(ctx, camera, skittle.math.cubic_bezier_points(
-            glm.vec2(0.0, 0.0),
-            glm.vec2(-80.0, 20.0),
-            glm.vec2(40.0, 120.0),
-            glm.vec2(160.0, 40.0)
-        ), skittle.color.WHITE, thickness=5.0)
+        for n in range(3, 13):
+            skittle.draw.line(ctx, camera, skittle.math.n_gon_vertices(
+                glm.vec2((n-3) * 100, 0),
+                n, 20
+            ), skittle.color.YELLOW, True, skittle.color.RED, thickness=3.0)
 
 
 
