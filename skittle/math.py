@@ -17,9 +17,41 @@ def clampf(x: float, low: float, high: float) -> float:
 def lerpf(a: float, b: float, t: float) -> float:
     return a + (b - a) * t
 
+def lerp_vec(a: glm.vec2, b: glm.vec2, t: float) -> glm.vec2:
+    return glm.vec2(
+        lerpf(a.x, b.x, t),
+        lerpf(a.y, b.y, t)
+    )
+
 def radf_to_vec(radians: float) -> glm.vec2:
     radians += glm.half_pi()
     return glm.vec2(glm.cos(radians), glm.sin(radians))
+
+def aprx_rangef(start: float, stop: float, step: float) -> list[float]:
+
+    values = [start]
+    point = start
+    while point < stop:
+        point += step
+        values.append(point)
+
+    return values
+
+def cubic_bezier_points(a: glm.vec2, b: glm.vec2, c: glm.vec2, d: glm.vec2, tesselation: float = 0.1) -> list[glm.vec2]:
+    points = []
+
+    for t in aprx_rangef(0.0, 1.0, tesselation):
+
+        e = lerp_vec(a, b, t)
+        f = lerp_vec(b, c, t)
+        g = lerp_vec(c, d, t)
+
+        h = lerp_vec(e, f, t)
+        i = lerp_vec(f, g, t)
+
+        points.append(lerp_vec(h, i, t))
+
+    return points
 
 class Rect():
     def __init__(self, x: float, y: float, w: float, h: float) -> None:

@@ -5,7 +5,27 @@ import skittle
 import numpy
 from pyglm import glm
 
-class TextureMesh():
+class AbsMesh():
+    def __init__(self) -> None:
+        self._program: moderngl.Program
+
+        raise NotImplementedError("Meshes MUST override the constructor. the default one provided in AbsMesh does fuck all.")
+
+    def uniform(self, key: str, value):
+        if key in self._program:
+
+            if type(value) == bytes:
+                self._program[key].write(value) # type: ignore
+                return
+            elif value is skittle.color.Color:
+                value = (value.r / 255, value.g / 255, value.b / 255, value.a / 255) # type: ignore
+            
+            self._program[key].value = value # type: ignore
+
+    def read_uniform(self, key: str):
+        return self._program[key]
+
+class TextureMesh(AbsMesh):
     VERTEX: str = """
 #version 330 core
 
@@ -90,7 +110,7 @@ void main() {
         self.uniform('u_proj_view', camera.proj_view_mat(overlay).to_bytes())
         self.uniform('u_position', (position.x, -position.y))
         self.uniform('u_scale', (scale.x, scale.y))
-        self.uniform('u_tint', (color.r / 255, color.g / 255, color.b / 255, color.a / 255))
+        self.uniform('u_tint', color)
         self.uniform('u_rot_rad', rotation)
         self.uniform('u_texture', 0)
 
@@ -105,14 +125,10 @@ void main() {
                     rotation: float = 0.0, 
                     layer: int = 0,
                     overlay: bool = False, 
-                    mode: int = moderngl.TRIANGLES,
-                    ignore_camera: bool = False):
+                    mode: int = moderngl.TRIANGLES):
     
-        if ignore_camera:
-            self._render_now(camera, position, scale, color, rotation, overlay, mode)
-        else:
-            layer = camera.calc_layer(layer, overlay)
-            camera.submit(lambda: self._render_now(camera, position, scale, color, rotation, overlay, mode), layer)
+        layer = camera.calc_layer(layer, overlay)
+        camera.submit(lambda: self._render_now(camera, position, scale, color, rotation, overlay, mode), layer)
 
     def release(self):
         self._vbo.release()
@@ -125,15 +141,7 @@ void main() {
 
         self._program.release()
 
-    def uniform(self, key: str, value):
-        if key in self._program:
-            if type(value) == bytes:
-                self._program[key].write(value) # type: ignore
-            else:
-                self._program[key].value = value # type: ignore
-
-    def read_uniform(self, key: str):
-        return self._program[key]
+    
 
 
 class SpritesheetMesh(TextureMesh):
@@ -290,3 +298,78 @@ void main() {
     
     def indexes(self) -> range:
         return range(len(self._instance_data))
+    
+
+class LineMesh(AbsMesh):
+    VERTEX: str = """
+#version 330 core
+
+in vec2 in_vertex;
+
+uniform mat4 u_proj_view;
+
+out vec2 v_vertex;
+
+void main() {
+    v_vertex = in_vertex;
+    gl_Position = u_proj_view * vec4(in_vertex, 0.0, 1.0);
+}
+    """
+
+    FRAGMENT: str = """
+#version 330
+
+in vec2 v_vertex;
+
+uniform vec4 u_line_color = vec4(1.0);
+
+out vec4 fragColor;
+
+void main() {
+    fragColor = u_line_color;
+}
+
+"""
+
+    def __init__(self, ctx: moderngl.Context) -> None:
+        self.ctx = ctx
+
+        self._program = self.ctx.program(LineMesh.VERTEX, LineMesh.FRAGMENT)
+        self._vbo: moderngl.Buffer | None = None
+        self._vao: moderngl.VertexArray | None = None
+
+        self._closed = False
+        self.rebake([glm.vec2(0.0)], closed=False)
+
+    def _render_now(self, camera: skittle.camera.Camera, color: skittle.color.Color, overlay: bool = False):
+        if self._vao == None:
+            raise ValueError("line vertex array was none!")
+
+        self.uniform('u_proj_view', camera.proj_view_mat(overlay).to_bytes())
+        self.uniform('u_line_color', color)
+        self._vao.render(mode=(moderngl.LINE_LOOP if self._closed else moderngl.LINE_STRIP))
+
+    def rebake(self, points: list[glm.vec2], closed: bool = False):
+        if self._vao != None:
+            self._vao.release()
+        if self._vbo != None:
+            self._vbo.release()
+
+        self._closed = closed
+
+        pointdata = []
+        for point in points:
+            pointdata.append(point.x)
+            pointdata.append(point.y)
+        array = glm.array.from_numbers(glm.float32, *pointdata)
+
+        self._vbo = self.ctx.buffer(array)
+        self._vao = self.ctx.vertex_array(self._program, [(self._vbo, "2f", "in_vertex")])
+
+
+    def release(self):
+        if self._vao != None:
+            self._vao.release()
+        self._program.release()
+        if self._vbo != None:
+            self._vbo.release()

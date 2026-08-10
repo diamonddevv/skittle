@@ -14,10 +14,12 @@ class Test(skittle.window.Window):
         self.age = 0.0
 
         self.hearts = skittle.resource.spritesheet("tests/asset/spritesheet.png")
+
         self.glyphxel = skittle.render.TextRenderer.from_json(self.ctx, "tests/asset/glyphxel_definition.json")
 
         self.heart_mesh = skittle.render.mesh.SpritesheetMesh(self.ctx, self.hearts)
         self.many_hearts = skittle.render.mesh.InstancedSpritesheetMesh(self.ctx, self.hearts)
+
 
         self.panning = False
         self.last_mouse_pos = glm.vec2()
@@ -27,16 +29,24 @@ class Test(skittle.window.Window):
 
         self.many_hearts.bake_instances([
             (x * 32, -y * 32, random.randint(0, 2), random.randint(0, 7), skittle.color.WHITE, random.uniform(0, glm.two_pi()), glm.vec2(random.uniform(1/2, 2))) 
-            for x in range(50) for y in range(50)
+            for x in range(80) for y in range(50)
             ])
+        
 
 
     def draw(self, ctx: moderngl.Context, camera: skittle.camera.Camera):
         
 
-        self.glyphxel.render(camera, f"individually animated instances: {self.many_hearts._render_instances} | framerate: {self._clock.get_fps():.0f} fps", glm.vec2(80, 0), scale=5)
+        #self.glyphxel.render(camera, f"individually animated instances: {self.many_hearts._render_instances} | framerate: {self._clock.get_fps():.0f} fps", glm.vec2(80, 0), scale=5)
 
-        self.many_hearts.render(camera, position=glm.vec2(100, 100))
+        #self.many_hearts.render(camera, position=glm.vec2(100, 100))
+        
+        skittle.draw.line(ctx, camera, skittle.math.cubic_bezier_points(
+            glm.vec2(0.0, 0.0),
+            glm.vec2(-80.0, 20.0),
+            glm.vec2(40.0, 120.0),
+            glm.vec2(160.0, 40.0)
+        ), skittle.color.WHITE, thickness=5.0)
 
 
 
