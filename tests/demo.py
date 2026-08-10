@@ -37,16 +37,15 @@ class Test(skittle.window.Window):
     def draw(self, ctx: moderngl.Context, camera: skittle.camera.Camera):
         
 
-        #self.glyphxel.render(camera, f"individually animated instances: {self.many_hearts._render_instances} | framerate: {self._clock.get_fps():.0f} fps", glm.vec2(80, 0), scale=5)
+        #self.glyphxel.render(camera, f"individually animated instances: {self.many_hearts._render_instances} | framerate: {self._clock.get_fps():.0f} fps", glm.vec2(0, 0), scale=5)
 
-        #self.many_hearts.render(camera, position=glm.vec2(100, 100))
-        
-        for n in range(3, 13):
-            skittle.draw.line(ctx, camera, skittle.math.n_gon_vertices(
-                glm.vec2((n-3) * 100, 0),
-                n, 20,
-                offset=self.age * glm.two_pi()
-            ), skittle.color.YELLOW, True, skittle.color.RED, thickness=3.0)
+        #self.many_hearts.render(camera, position=glm.vec2(0, 100))
+
+        skittle.draw.line(ctx, camera, skittle.math.n_gon_vertices(
+            glm.vec2(50, 50),
+            6, 25,
+            offset=self.age * glm.two_pi()
+        ), skittle.color.YELLOW, True, skittle.color.RED, thickness=3.0, overlay=True)
 
 
 

@@ -339,7 +339,7 @@ void main() {
         self._vao: moderngl.VertexArray | None = None
 
         self._closed = False
-        self.rebake([glm.vec2(0.0)], closed=False)
+        self.bake([glm.vec2(0.0)], closed=False)
 
     def _render_now(self, camera: skittle.camera.Camera, color: skittle.color.Color, overlay: bool = False, fill: skittle.color.Color | None = None):
         if self._vao == None:
@@ -351,10 +351,11 @@ void main() {
             self.uniform('u_color', fill)
             self._vao.render(mode=moderngl.TRIANGLE_FAN)
 
-        self.uniform('u_color', color)
-        self._vao.render(mode=(moderngl.LINE_LOOP if self._closed else moderngl.LINE_STRIP))
+        if color != fill:
+            self.uniform('u_color', color)
+            self._vao.render(mode=(moderngl.LINE_LOOP if self._closed else moderngl.LINE_STRIP))
 
-    def rebake(self, points: list[glm.vec2], closed: bool = False):
+    def bake(self, points: list[glm.vec2], closed: bool = False):
         if self._vao != None:
             self._vao.release()
         if self._vbo != None:
@@ -365,7 +366,7 @@ void main() {
         pointdata = []
         for point in points:
             pointdata.append(point.x)
-            pointdata.append(point.y)
+            pointdata.append(-point.y)
         array = glm.array.from_numbers(glm.float32, *pointdata)
 
         self._vbo = self.ctx.buffer(array)
