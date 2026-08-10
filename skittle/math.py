@@ -57,9 +57,11 @@ def n_gon_vertices(origin: glm.vec2, n: int, r: float, offset: float = 0.0) -> l
     vertices = []
 
     for i in range(n):
+        trig_input = (glm.two_pi() * i) / n + offset
+
         vertices.append(glm.vec2(
-            origin.x + r * glm.cos((2 * glm.pi() * i) / n + offset),
-            origin.y + r * glm.sin((2 * glm.pi() * i) / n + offset)
+            origin.x + r * glm.cos(trig_input),
+            origin.y + r * glm.sin(trig_input)
         ))
 
     return vertices

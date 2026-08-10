@@ -27,10 +27,10 @@ class Test(skittle.window.Window):
         self.sprite_idx_x = 0
         self.sprite_idx_y = 0
 
-        self.many_hearts.bake_instances([
-            (x * 32, -y * 32, random.randint(0, 2), random.randint(0, 7), skittle.color.WHITE, random.uniform(0, glm.two_pi()), glm.vec2(random.uniform(1/2, 2))) 
-            for x in range(80) for y in range(50)
-            ])
+        #self.many_hearts.bake_instances([
+        #    (x * 32, -y * 32, random.randint(0, 2), random.randint(0, 7), skittle.color.WHITE, random.uniform(0, glm.two_pi()), glm.vec2(random.uniform(1/2, 2))) 
+        #    for x in range(80) for y in range(50)
+        #    ])
         
 
 
@@ -44,7 +44,8 @@ class Test(skittle.window.Window):
         for n in range(3, 13):
             skittle.draw.line(ctx, camera, skittle.math.n_gon_vertices(
                 glm.vec2((n-3) * 100, 0),
-                n, 20
+                n, 20,
+                offset=self.age * glm.two_pi()
             ), skittle.color.YELLOW, True, skittle.color.RED, thickness=3.0)
 
 
