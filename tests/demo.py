@@ -27,32 +27,46 @@ class Test(skittle.window.Window):
         self.sprite_idx_x = 0
         self.sprite_idx_y = 0
 
-        #self.many_hearts.bake_instances([
-        #    (x * 32, -y * 32, random.randint(0, 2), random.randint(0, 7), skittle.color.WHITE, random.uniform(0, glm.two_pi()), glm.vec2(random.uniform(1/2, 2))) 
-        #    for x in range(80) for y in range(50)
-        #    ])
+        allowed_cells: list[tuple[int, int]] = [
+            (0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), 
+            (0, 1), (1, 1), (2, 1), 
+            (0, 2), (1, 2), (2, 2), (3, 2), (4, 2),                 (7, 2), 
+            (0, 3), (1, 3), (2, 3), (3, 3),                         (7, 3), 
+            (0, 4), (1, 4), (2, 4), (3, 4),                         (7, 4), 
+            (0, 5), (1, 5), (2, 5), (3, 5), (4, 5),                 (7, 5), 
+            (0, 6), (1, 6), (2, 6),                         (6, 6), (7, 6), 
+            (0, 7), (1, 7), (2, 7), (3, 7), (4, 7), (5, 7), (6, 7), (7, 7), 
+        ]
+        self.many_hearts.bake_instances([
+            (x * 32, -y * 32, *random.choice(allowed_cells), skittle.color.WHITE, random.uniform(0, glm.two_pi()), glm.vec2(random.uniform(2.0, 3.0))) 
+            for x in range(80) for y in range(50)
+            ])
         
+        self.coltest_rect = skittle.math.Rect(
+            20, 20,
+            180, 80
+        )
+
+        self.post_processor.add(skittle.render.PostProcessEffect.from_json(self.ctx, "tests/asset/postprocess/crt.json"))
 
 
     def draw(self, ctx: moderngl.Context, camera: skittle.camera.Camera):
-        
+        ctx.clear(1, 0, 1, 1)        
 
-        #self.glyphxel.render(camera, f"individually animated instances: {self.many_hearts._render_instances} | framerate: {self._clock.get_fps():.0f} fps", glm.vec2(0, 0), scale=5)
+        self.glyphxel.render(camera, f"individually animated instances: {self.many_hearts._render_instances} | framerate: {self._clock.get_fps():.0f} fps", glm.vec2(0, 0), scale=5)
 
         #self.many_hearts.render(camera, position=glm.vec2(0, 100))
 
-        skittle.draw.line(ctx, camera, skittle.math.n_gon_vertices(
-            glm.vec2(50, 50),
-            6, 25,
-            offset=self.age * glm.two_pi()
-        ), skittle.color.YELLOW, True, skittle.color.RED, thickness=3.0, overlay=True)
+        
+        skittle.draw.rect(ctx, camera, self.coltest_rect, skittle.color.GREEN if self.coltest_rect.collides_point(skittle.input.get_world_mouse_pos(camera, overlay=True)) else skittle.color.RED, filled=True, overlay=True)
 
+        
 
 
     def update(self, dt: float, camera: Camera):
         self.age += dt
-        for i in self.many_hearts.indexes():
-            self.many_hearts.update_instance(i, lambda old: (old[0], old[1], old[2], old[3], old[4], old[5] + dt * glm.quarter_pi() * 5 * glm.sin(hash(str(i))), glm.vec2(max(1.5 * glm.sin(hash(str(i))), 0) + 1)))
+        #for i in self.many_hearts.indexes():
+        #    self.many_hearts.update_instance(i, lambda old: (old[0], old[1], old[2], old[3], old[4], old[5] + dt * glm.quarter_pi() * 5 * glm.sin(hash(str(i))), old[6]))
 
     def handle_zoom(self, event: pygame.Event):
         if event.y == 0:

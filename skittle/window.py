@@ -20,6 +20,7 @@ class Window():
 
         self._running = False
         self._fps_in_title = fps_in_title
+        self._aspect = 1 / 1
         self._window_surface = pygame.display.set_mode((width, height), pygame.RESIZABLE | pygame.OPENGL | pygame.DOUBLEBUF)
         self._clock = pygame.Clock()
 
@@ -73,8 +74,9 @@ class Window():
                 self.close()
             if e.type == pygame.VIDEORESIZE:
                 self.ctx.viewport = (0, 0, e.w, e.h)
-                self.camera.resize(e.w, e.h)
-                self.post_processor.resize(e.w, e.h)
+                self._window_size = (e.w, e.h)
+                self.post_processor.resize_viewport(e.w, e.h)
+                self.camera.reframe(self.post_processor.viewport)
 
             skittle.input.TextInput._textinput_event(e)
 
@@ -85,7 +87,7 @@ class Window():
 
     def close(self):
         self._running = False
-        self.post_processor.release()
+        self.post_processor.release(all=True)
         self.ctx.release()
 
     def switch_scene(self, scene: skittle.scene.SceneSwitch):

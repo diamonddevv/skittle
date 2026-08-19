@@ -54,17 +54,10 @@ def cubic_bezier_points(a: glm.vec2, b: glm.vec2, c: glm.vec2, d: glm.vec2, tess
     return points
 
 def n_gon_vertices(origin: glm.vec2, n: int, r: float, offset: float = 0.0) -> list[glm.vec2]:
-    vertices = []
-
-    for i in range(n):
-        trig_input = (glm.two_pi() * i) / n + offset
-
-        vertices.append(glm.vec2(
-            origin.x + r * glm.cos(trig_input),
-            origin.y + r * glm.sin(trig_input)
-        ))
-
-    return vertices
+    return [glm.vec2(
+            origin.x + r * glm.cos((glm.two_pi() * i) / n + offset),
+            origin.y + r * glm.sin((glm.two_pi() * i) / n + offset)
+        ) for i in range(n)]
 
 class Rect():
     def __init__(self, x: float, y: float, w: float, h: float) -> None:

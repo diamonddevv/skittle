@@ -7,8 +7,11 @@ class Camera():
     type _Submission = typing.Callable[[], typing.Any]
 
     def __init__(self, width: int, height: int, zoom: float = 1.0) -> None:
-        self.width = width
-        self.height = height
+        self.frame_offset_x = 0
+        self.frame_offset_y = 0
+        self.frame_width = width
+        self.frame_height = height
+
         self.zoom = zoom
         self.rotation = 0.0
 
@@ -19,8 +22,8 @@ class Camera():
         self._submissions: dict[int, list[Camera._Submission]] = {}
 
     def projection(self, overlay: bool):
-        half_w = self.width / 2 / (self.zoom if not overlay else 1)
-        half_h = self.height / 2 / (self.zoom if not overlay else 1)
+        half_w = self.frame_width / 2 / (self.zoom if not overlay else 1)
+        half_h = self.frame_height / 2 / (self.zoom if not overlay else 1)
 
         return glm.ortho(
             -half_w, half_w,
@@ -36,8 +39,8 @@ class Camera():
             view = glm.translate(view, glm.vec3(-self.position.x, -self.position.y, 0.0))
         else:
             view = glm.translate(view, glm.vec3(
-                -self.width / 2, 
-                self.height / 2, 
+                -self.frame_width / 2, 
+                self.frame_height / 2, 
                 0.0))
         return view
     
@@ -82,6 +85,8 @@ class Camera():
     def set_zoom(self, zoom: float = 1.0):
         self.zoom = zoom
 
-    def resize(self, width: int, height: int):
-        self.width = width
-        self.height = height
+    def reframe(self, viewport: tuple[int, int, int, int]):
+        self.frame_offset_x = viewport[0]
+        self.frame_offset_y = viewport[1]
+        self.frame_width = viewport[2]
+        self.frame_height = viewport[3]

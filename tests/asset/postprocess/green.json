@@ -1,0 +1,7 @@
+{
+    "effect_uid": "green",
+    "vertex_shader": "tests/asset/postprocess/green.glsl",
+
+    "uniform_param_defaults": {
+    }
+}
