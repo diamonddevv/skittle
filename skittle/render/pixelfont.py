@@ -89,13 +89,15 @@ class TextRenderer():
         """
         call `render` instead. this function exists to hack around the fact a single mesh could only draw one piece of text per frame, so instead they're indiviudally batched on a layer of abstraction higher than the mesh itself
         """
+        if self.caps_only:
+            text = text.upper()
+
         passed, bad_char = self.verify_all_codepoints(text)
         if not passed:
             skittle.err(f"tried to render text with invalid character '{bad_char}'")
             return None
 
-        if self.caps_only:
-            text = text.upper()
+        
 
         inst_data: list[skittle.render.RenderInstance] = []
 
@@ -104,7 +106,7 @@ class TextRenderer():
         for char in text:
 
             if char == '\n':
-                line += 1
+                line += scale
                 width_pos = 0
             else:
                 cx, cy = self.get_codepoint_pos(char)

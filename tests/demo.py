@@ -62,11 +62,12 @@ class Test(skittle.window.Window):
     def draw(self, ctx: moderngl.Context, camera: skittle.camera.Camera):
                 
 
-        self.glyphxel.render(camera, f"instances: {self.many_hearts._render_instances} | framerate: {self._clock.get_fps():.0f} fps", glm.vec2(0, 0), scale=5)
+        self.glyphxel.render(camera, f"instances: {self.many_hearts._render_instances}\nframerate: {self._clock.get_fps():.0f} fps", glm.vec2(0, -100), scale=5)
 
         self.many_hearts.render(camera, position=glm.vec2(0, 100))
 
         skittle.draw.rect(ctx, camera, self.coltest_rect, skittle.color.GREEN if self.coltest_rect.collides_point(skittle.input.get_world_mouse_pos(camera, overlay=False)) else skittle.color.RED, filled=True, overlay=False)
+        skittle.draw.circle(ctx, camera, glm.vec2(0, 0), 10, skittle.color.CYAN, filled=True)
     
 
     def update(self, dt: float, camera: Camera):
