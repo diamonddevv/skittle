@@ -10,7 +10,7 @@ from skittle.camera import Camera
 
 class Test(skittle.window.Window):
     def __init__(self) -> None:
-        super().__init__(None, "test", 500, 500, target_fps=0, fps_in_title=False)
+        super().__init__(None, "test", 1280, 720, target_fps=0, fps_in_title=True)
         self.age = 0.0
 
         self.hearts = skittle.resource.spritesheet("tests/asset/spritesheet.png")
@@ -39,29 +39,28 @@ class Test(skittle.window.Window):
         ]
         self.many_hearts.bake_instances([
             (x * 32, -y * 32, *random.choice(allowed_cells), skittle.color.WHITE, random.uniform(0, glm.two_pi()), glm.vec2(random.uniform(2.0, 3.0))) 
-            for x in range(80) for y in range(50)
+            for x in range(100) for y in range(50)
             ])
         
         self.coltest_rect = skittle.math.Rect(
-            20, 20,
+            -200, -200,
             180, 80
         )
 
-        self.post_processor.add(skittle.render.PostProcessEffect.from_json(self.ctx, "tests/asset/postprocess/crt.json"))
+        #self.post_processor.add(skittle.render.PostProcessEffect.from_json(self.ctx, "tests/asset/postprocess/crt.json"))
 
 
     def draw(self, ctx: moderngl.Context, camera: skittle.camera.Camera):
-        ctx.clear(1, 0, 1, 1)        
+                
 
         self.glyphxel.render(camera, f"individually animated instances: {self.many_hearts._render_instances} | framerate: {self._clock.get_fps():.0f} fps", glm.vec2(0, 0), scale=5)
 
-        #self.many_hearts.render(camera, position=glm.vec2(0, 100))
+        self.many_hearts.render(camera, position=glm.vec2(0, 100))
 
         
-        skittle.draw.rect(ctx, camera, self.coltest_rect, skittle.color.GREEN if self.coltest_rect.collides_point(skittle.input.get_world_mouse_pos(camera, overlay=True)) else skittle.color.RED, filled=True, overlay=True)
+        skittle.draw.rect(ctx, camera, self.coltest_rect, skittle.color.GREEN if self.coltest_rect.collides_point(skittle.input.get_world_mouse_pos(camera, overlay=False)) else skittle.color.RED, filled=True, overlay=False)
 
-        
-
+    
 
     def update(self, dt: float, camera: Camera):
         self.age += dt
