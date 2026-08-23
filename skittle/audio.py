@@ -1,4 +1,5 @@
 import pygame
+import numpy
 import skittle
 
 
@@ -42,13 +43,15 @@ def load_sound(uid: str, path: str):
         sfx = pygame.Sound(path)
         AudioManager.INSTANCE.sounds[uid] = sfx
 
-def play_sound(uid: str, volume: float = 0.5):
+def play_sound(uid: str, volume: float = 0.5, pitch: float = 1.0):
     if not _assert_sound_exists(uid):
         return
     channel = pygame.mixer.find_channel()
     if channel != None:
         sound = AudioManager.INSTANCE.sounds[uid]
         channel.set_volume(volume)
+        if pitch != 1.0:
+            sound = _change_pitch(sound, pitch)
         channel.play(sound)
 
 def get_sound_length_ms(uid: str) -> float:
@@ -123,3 +126,11 @@ def _assert_sound_exists(uid: str) -> bool:
         skittle.err(f"sound with uid '{uid}' does not exist in sound cache!")
         return False
     return True 
+
+
+def _change_pitch(sound: pygame.Sound, pitch_factor: float): # im not a sound guy. i dont know how this works.
+    array = pygame.sndarray.array(sound)
+    indices = numpy.round(numpy.arange(0, len(array), pitch_factor)).astype(int)
+    indices = indices[indices < len(array)]
+    new_array = array[indices]
+    return pygame.sndarray.make_sound(new_array.astype(array.dtype))

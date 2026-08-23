@@ -76,7 +76,7 @@ class Test(skittle.window.Window):
         #    self.many_hearts.update_instance(i, lambda old: (old[0], old[1], old[2], old[3], old[4], old[5] + dt * glm.quarter_pi() * 5 * glm.sin(hash(str(i))), old[6]))
 
         if skittle.input.keys_click()[skittle.input.KEY_SPACE]:
-            skittle.audio.play_sound('scotland')
+            skittle.audio.play_sound('scotland', pitch=random.uniform(0.9, 1.1))
 
     def handle_zoom(self, event: pygame.Event):
         if event.y == 0:

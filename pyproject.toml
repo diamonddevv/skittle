@@ -6,11 +6,7 @@ build-backend = "hatchling.build"
 name = "skittle"
 description = "custom game engine built upon pygame-ce"
 version = "0.0.0"
-authors = [
-    {
-         name = "DiamondDev"
-    }
-]
+authors = [{ name = "DiamondDev"}]
 license = "MIT"
 requires-python = ">=3.14"
 readme = "README.md"
