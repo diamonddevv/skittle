@@ -45,6 +45,7 @@ class Window():
         while self._running:
             self.event_handle()
             self.update(dt, self.camera)
+            skittle.audio.AudioManager.INSTANCE.update(dt)
             if not self._running:
                 continue
 
@@ -88,6 +89,7 @@ class Window():
     def close(self):
         self._running = False
         self.post_processor.release(all=True)
+        skittle.audio.AudioManager.INSTANCE.release()
         self.ctx.release()
 
     def switch_scene(self, scene: skittle.scene.SceneSwitch):

@@ -97,7 +97,7 @@ class TextRenderer():
         if self.caps_only:
             text = text.upper()
 
-        inst_data: list[skittle.render.mesh.InstancedSpritesheetMesh._InstanceData] = []
+        inst_data: list[skittle.render.RenderInstance] = []
 
         width_pos = 0
         line = 0
@@ -109,10 +109,12 @@ class TextRenderer():
             else:
                 cx, cy = self.get_codepoint_pos(char)
                 width = self.get_character_width(char) * scale
-                inst_data.append((
-                    width_pos + self.spritesheet.sprite_w / 2,
-                    -line * self.spritesheet.sprite_h - self.spritesheet.sprite_h / 2,
-                    cx, cy,
+                inst_data.append(skittle.render.RenderInstance(
+                    glm.vec2(
+                        width_pos + self.spritesheet.sprite_w / 2,
+                        -line * self.spritesheet.sprite_h - self.spritesheet.sprite_h / 2
+                        ),
+                    (cx, cy),
                     color,
                     rotation_radians,
                     glm.vec2(scale)

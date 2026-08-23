@@ -21,6 +21,7 @@ def shader(path: str) -> str:
 def program(ctx: moderngl.Context, frag_path: str = "shader/blit.frag", vert_path: str = "shader/blit.vert") -> moderngl.Program:
     return ctx.program(vertex_shader=shader(vert_path), fragment_shader=shader(frag_path))
 
+
 # # # #
 
 class _ResourceData():

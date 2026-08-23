@@ -222,15 +222,7 @@ void main() {
 }
 """
 
-    type _InstanceData = tuple[
-        float, # pos x
-        float, # pos y
-        int, # spritesheet cell x
-        int, # spritesheet cell y
-        skittle.color.Color, # tint color
-        float, # rotation
-        glm.vec2, # scale
-        ]
+    
     FLOAT_COUNT: int = 13
         
 
@@ -243,7 +235,7 @@ void main() {
         self._ivbo = skittle.render.gl.InstancedBuffer(ctx)
         self._ivbo.set_instance_size(13*4)
 
-        self._instance_data: list[InstancedSpritesheetMesh._InstanceData] = []
+        self._instance_data: list[RenderInstance] = []
         
         self.build_vao_vbo()
 
@@ -258,11 +250,11 @@ void main() {
              "in_instance_rotation", "in_instance_scale")
         ], index_buffer=self._ibo)
 
-    def update_instance(self, idx: int, update: typing.Callable[[_InstanceData], _InstanceData]):
+    def update_instance(self, idx: int, update: typing.Callable[[RenderInstance], RenderInstance]):
         self._instance_data[idx] = update(self._instance_data[idx])
         self._ivbo.update_instance(self.instance_data_to_bytes(self._instance_data[idx]), idx)
 
-    def bake_instances(self, instances: list[_InstanceData] | None = None):
+    def bake_instances(self, instances: list[RenderInstance] | None = None):
         if instances is not None:
             self._instance_data = instances
 
@@ -280,25 +272,45 @@ void main() {
             self._render_instances = self._ivbo._instances
             return super()._render_now(camera, position, scale, color, rotation, overlay, mode)
     
-    def instance_data_to_bytes(self, instance: _InstanceData) -> bytes:
+    def instance_data_to_bytes(self, instance: RenderInstance) -> bytes:
         data = numpy.empty((1, 13), dtype=numpy.float32)
-        (x, y, cx, cy, col, rot, scale) = instance
+        
+        cx, cy = instance.spritesheet_cell
         u0, v0, u1, v1 = self.spritesheet.uv(cx, cy)
 
         data[0] = [
-            x, y, 
+            instance.pos.x, instance.pos.y, 
             u0, v0, 
             u1-u0, v1-v0,
-            col.r/255, col.g/255, col.b/255, col.a/255,
-            rot,
-            scale.x, scale.y,
+            instance.color.r/255, instance.color.g/255, instance.color.b/255, instance.color.a/255,
+            instance.rotation,
+            instance.scale.x, instance.scale.y
         ]
 
         return data.tobytes()
     
     def indexes(self) -> range:
         return range(len(self._instance_data))
-    
+
+
+"""
+type _InstanceData = tuple[
+        float, # pos x
+        float, # pos y
+        int, # spritesheet cell x
+        int, # spritesheet cell y
+        skittle.color.Color, # tint color
+        float, # rotation
+        glm.vec2, # scale
+        ]"""
+class RenderInstance():
+    def __init__(self, pos: glm.vec2, spritesheet_cell: tuple[int, int], color: skittle.color.Color, rotation: float, scale: glm.vec2) -> None:
+        self.pos = pos
+        self.spritesheet_cell = spritesheet_cell
+        self.color = color
+        self.rotation = rotation
+        self.scale = scale
+
 
 class LineMesh(AbsMesh):
     VERTEX: str = """

@@ -10,6 +10,7 @@ import colorama
 import typing
 
 from skittle import math
+from skittle import audio
 from skittle import scene
 from skittle import observer
 from skittle import i18n
@@ -49,3 +50,5 @@ def bind_pygame_event_handler(handler: _EventHandler._PygameEventHandler, *event
 def init():
     log(f"initialised (v{__VERSION__})")
     pygame.init()
+    pygame.mixer.init()
+    audio.AudioManager.INSTANCE = audio.AudioManager()

@@ -38,7 +38,13 @@ class Test(skittle.window.Window):
             (0, 7), (1, 7), (2, 7), (3, 7), (4, 7), (5, 7), (6, 7), (7, 7), 
         ]
         self.many_hearts.bake_instances([
-            (x * 32, -y * 32, *random.choice(allowed_cells), skittle.color.WHITE, random.uniform(0, glm.two_pi()), glm.vec2(random.uniform(2.0, 3.0))) 
+            skittle.render.RenderInstance(
+                glm.vec2(x * 12 * 8, -y * 8 * 8), 
+                random.choice(allowed_cells), 
+                skittle.color.WHITE, 
+                0, 
+                glm.vec2(8, 8)
+                ) 
             for x in range(100) for y in range(50)
             ])
         
@@ -47,25 +53,30 @@ class Test(skittle.window.Window):
             180, 80
         )
 
-        #self.post_processor.add(skittle.render.PostProcessEffect.from_json(self.ctx, "tests/asset/postprocess/crt.json"))
+        self.post_processor.add(skittle.render.PostProcessEffect.from_json(self.ctx, "tests/asset/postprocess/crt.json"))
+
+        skittle.audio.load_sound("scotland", "tests/asset/sound/SCOTLAND.wav")
+
 
 
     def draw(self, ctx: moderngl.Context, camera: skittle.camera.Camera):
                 
 
-        self.glyphxel.render(camera, f"individually animated instances: {self.many_hearts._render_instances} | framerate: {self._clock.get_fps():.0f} fps", glm.vec2(0, 0), scale=5)
+        self.glyphxel.render(camera, f"instances: {self.many_hearts._render_instances} | framerate: {self._clock.get_fps():.0f} fps", glm.vec2(0, 0), scale=5)
 
         self.many_hearts.render(camera, position=glm.vec2(0, 100))
 
-        
         skittle.draw.rect(ctx, camera, self.coltest_rect, skittle.color.GREEN if self.coltest_rect.collides_point(skittle.input.get_world_mouse_pos(camera, overlay=False)) else skittle.color.RED, filled=True, overlay=False)
-
     
 
     def update(self, dt: float, camera: Camera):
         self.age += dt
+
         #for i in self.many_hearts.indexes():
         #    self.many_hearts.update_instance(i, lambda old: (old[0], old[1], old[2], old[3], old[4], old[5] + dt * glm.quarter_pi() * 5 * glm.sin(hash(str(i))), old[6]))
+
+        if skittle.input.keys_click()[skittle.input.KEY_SPACE]:
+            skittle.audio.play_sound('scotland')
 
     def handle_zoom(self, event: pygame.Event):
         if event.y == 0:
