@@ -11,5 +11,5 @@ uniform float u_time;
 
 void main()
 {
-    fragColor = texture(u_screen_texture, v_uv) * vec4(0, 1, 0, 1);
+    fragColor = texture(u_screen_texture, v_uv) * vec4(0.65, 1, 0.65, 1.0);
 }

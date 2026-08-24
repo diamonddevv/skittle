@@ -116,9 +116,10 @@ class PostProcessor():
 
     def begin_frame(self):
         self.scene_fbo.use()
-        self.scene_fbo.clear()
+        self.scene_fbo.clear(alpha=1)
 
     def flush(self):
+
         if len(self._effects) == 0:
             self._present(self.scene_tex)
             return
@@ -128,14 +129,16 @@ class PostProcessor():
         textures = [self.ping_tex, self.pong_tex]
 
         for i, uid in enumerate(self._effects):
-            target = buffers[i % 2]
-            self._effects[uid].render(src_tex, target, *self.vp_size)
-            src_tex = textures[i % 2]
+            if self._effects[uid].active:
+                target = buffers[i % 2]
+                self._effects[uid].render(src_tex, target, *self.vp_size)
+                src_tex = textures[i % 2]
 
         self._present(src_tex)
 
-    def add(self, postproc: PostProcessEffect):
+    def add(self, postproc: PostProcessEffect) -> str:
         self._effects[postproc.uid] = postproc
+        return postproc.uid
 
     def modify_param(self, id: str, param: str, value: float | tuple[float, ...]):
         self._effects[id]._params[param] = value
@@ -157,7 +160,22 @@ class PostProcessor():
             self.scene_tex.release()
 
     def set_active(self, uid: str, active: bool):
+        if uid not in self._effects:
+            skittle.err(f"uid {uid} was not registered, skipping setting active state..")
+            return
         self._effects[uid].active = active
+
+    def get_active(self, uid: str) -> bool:
+        if uid not in self._effects:
+            skittle.err(f"uid {uid} was not registered, returning false..")
+            return False
+        return self._effects[uid].active
+    
+    def toggle_active(self, uid: str):
+        if uid not in self._effects:
+            skittle.err(f"uid {uid} was not registered, skipping toggling active state..")
+            return False
+        self._effects[uid].active = not self._effects[uid].active
         
 
 class PostProcessEffect():
@@ -208,9 +226,6 @@ void main() {
                 self._program[key].value = value # type: ignore
 
     def render(self, src_framebuf_tex: moderngl.Texture, target_framebuf: moderngl.Framebuffer, width: int, height: int):
-        if not self.active:
-            return
-
         target_framebuf.use()
         src_framebuf_tex.use(0)
         self.uniform("u_screen_texture", 0)

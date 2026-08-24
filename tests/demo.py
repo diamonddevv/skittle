@@ -56,7 +56,10 @@ class Test(skittle.window.Window):
             180, 80
         )
 
-        #self.post_processor.add(skittle.render.PostProcessEffect.from_json(self.ctx, "tests/asset/postprocess/crt.json"))
+        self.post_processor.add(skittle.render.PostProcessEffect.from_json(self.ctx, "tests/asset/postprocess/crt.json"))
+        self.post_processor.add(skittle.render.PostProcessEffect.from_json(self.ctx, "tests/asset/postprocess/green.json"))
+        self.post_processor.set_active("crt", False)
+        self.post_processor.set_active("green", True)
 
         skittle.audio.load_sound("scotland", "tests/asset/sound/SCOTLAND.wav")
 
@@ -65,6 +68,7 @@ class Test(skittle.window.Window):
 
 
     def draw(self, ctx: moderngl.Context, camera: skittle.camera.Camera):
+
         self.glyphxel.render(camera, f"instances: {self.many_hearts._render_instances}\nframerate: {self._clock.get_fps():.0f} fps", glm.vec2(0, -100), scale=5)
 
         self.many_hearts.render(camera, position=glm.vec2(0, 100))
@@ -82,6 +86,7 @@ class Test(skittle.window.Window):
 
         if skittle.input.keys_click()[skittle.input.KEY_SPACE]:
             skittle.audio.play_sound('scotland', pitch=random.uniform(0.9, 1.1))
+            self.post_processor.toggle_active("crt")
 
     def handle_zoom(self, event: pygame.Event):
         if event.y == 0:
@@ -103,6 +108,9 @@ class Test(skittle.window.Window):
                 delta = (current_pos - self.last_mouse_pos) / self.camera.zoom
                 self.camera.move(*delta)
                 self.last_mouse_pos = current_pos
+
+
+
 
 if __name__ == "__main__":
     wnd = Test()
