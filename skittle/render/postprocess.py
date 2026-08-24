@@ -155,6 +155,9 @@ class PostProcessor():
                 
             self.scene_fbo.release()
             self.scene_tex.release()
+
+    def set_active(self, uid: str, active: bool):
+        self._effects[uid].active = active
         
 
 class PostProcessEffect():
@@ -181,6 +184,8 @@ void main() {
 
         self._params = params
 
+        self.active = True
+
         self._samplers: list[moderngl.Texture] = []
         self._build_use_sampler_textures(sampler_paths)
 
@@ -203,6 +208,9 @@ void main() {
                 self._program[key].value = value # type: ignore
 
     def render(self, src_framebuf_tex: moderngl.Texture, target_framebuf: moderngl.Framebuffer, width: int, height: int):
+        if not self.active:
+            return
+
         target_framebuf.use()
         src_framebuf_tex.use(0)
         self.uniform("u_screen_texture", 0)

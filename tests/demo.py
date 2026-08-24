@@ -63,8 +63,6 @@ class Test(skittle.window.Window):
         self.tilemap = skittle.resource.Tilemap.from_json(self.ctx, "tests/asset/tilemap/map.json")
         self.tilemap.bake()
 
-        print(len(self.tilemap.mesh._instance_data))
-
 
     def draw(self, ctx: moderngl.Context, camera: skittle.camera.Camera):
         self.glyphxel.render(camera, f"instances: {self.many_hearts._render_instances}\nframerate: {self._clock.get_fps():.0f} fps", glm.vec2(0, -100), scale=5)

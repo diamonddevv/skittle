@@ -124,4 +124,11 @@ class Rect():
                 f"{self.w},".ljust(8) +
                 f"{self.h}".ljust(8) +
                 ")"
-                );
+                )
+    
+    @staticmethod
+    def merge_rects(rects: list[Rect]) -> list[Rect]:
+        """
+        orthogonal polygon decomposition
+        """
+        return rects
