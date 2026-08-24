@@ -23,6 +23,7 @@ class TextRenderer():
         self.caps_only = caps_only
         self.default_glyph_width = default_glyph_width
         self.glyph_widths = glyph_widths
+        self.skip_invalid_chars = False
 
         self.mesh = skittle.render.mesh.InstancedSpritesheetMesh(ctx, self.spritesheet)
 
@@ -93,7 +94,7 @@ class TextRenderer():
             text = text.upper()
 
         passed, bad_char = self.verify_all_codepoints(text)
-        if not passed:
+        if not passed and not self.skip_invalid_chars:
             skittle.err(f"tried to render text with invalid character '{bad_char}'")
             return None
 
@@ -109,6 +110,9 @@ class TextRenderer():
                 line += scale
                 width_pos = 0
             else:
+                if self.skip_invalid_chars and char not in self.codepoints:
+                    continue
+
                 cx, cy = self.get_codepoint_pos(char)
                 width = self.get_character_width(char) * scale
                 inst_data.append(skittle.render.RenderInstance(

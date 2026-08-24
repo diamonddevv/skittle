@@ -120,10 +120,10 @@ void main() {
 
         self._vao.render(mode, instances=self._render_instances)
 
-    def load_texture_whole(self, texture: pygame.Surface):
+    def load_texture_whole(self, texture: pygame.Surface, force_size: tuple[int, int] | None = None):
         self.release()
 
-        vertices, indices = skittle.render.gl.uv_quad(texture.width, texture.height, 0, 0, 1, 1)
+        vertices, indices = skittle.render.gl.uv_quad(texture.width if force_size == None else force_size[0], texture.height if force_size == None else force_size[1], 0, 0, 1, 1)
         self._vbo = self._ctx.buffer(vertices)
         self._ibo = self._ctx.buffer(indices)
         self._vao = self._ctx.vertex_array(self._program, [(self._vbo, "2f 2f", 'in_vertex_pos', 'in_uv')], index_buffer=self._ibo)
