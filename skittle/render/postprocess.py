@@ -86,7 +86,6 @@ class PostProcessor():
     def _present(self, texture: moderngl.Texture):
         self.ctx.screen.use()
         self.ctx.viewport = (0, 0, *self.window_size)
-        self.ctx.clear()
 
         self.ctx.viewport = self.viewport
         texture.use(location=0)

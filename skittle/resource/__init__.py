@@ -6,6 +6,7 @@ import io
 import requests
 
 from skittle.resource.spritesheet import *
+from skittle.resource.tilemap import *
 
 
 def image(path: str) -> pygame.Surface:

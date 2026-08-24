@@ -56,25 +56,24 @@ class Test(skittle.window.Window):
             180, 80
         )
 
-        self.post_processor.add(skittle.render.PostProcessEffect.from_json(self.ctx, "tests/asset/postprocess/crt.json"))
+        #self.post_processor.add(skittle.render.PostProcessEffect.from_json(self.ctx, "tests/asset/postprocess/crt.json"))
 
         skittle.audio.load_sound("scotland", "tests/asset/sound/SCOTLAND.wav")
 
-        self.urlimg = skittle.resource.image_from_url(Test.URL, "fynndiamond@gmail.com")
+        self.tilemap = skittle.resource.Tilemap.from_json(self.ctx, "tests/asset/tilemap/map.json")
+        self.tilemap.bake()
 
-
-
+        print(len(self.tilemap.mesh._instance_data))
 
 
     def draw(self, ctx: moderngl.Context, camera: skittle.camera.Camera):
-        ctx.clear(0, 0.8, 0.7)
-
         self.glyphxel.render(camera, f"instances: {self.many_hearts._render_instances}\nframerate: {self._clock.get_fps():.0f} fps", glm.vec2(0, -100), scale=5)
 
         self.many_hearts.render(camera, position=glm.vec2(0, 100))
 
         skittle.draw.rect(ctx, camera, self.coltest_rect, skittle.color.GREEN if self.coltest_rect.collides_point(skittle.input.get_world_mouse_pos(camera, overlay=False)) else skittle.color.RED, filled=True, overlay=False)
-        
+
+        self.tilemap.render(camera, glm.vec2(-1200, 200))
     
 
     def update(self, dt: float, camera: Camera):

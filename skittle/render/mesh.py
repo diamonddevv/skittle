@@ -289,7 +289,7 @@ void main() {
         data = numpy.empty((1, 13), dtype=numpy.float32)
         
         cx, cy = instance.spritesheet_cell
-        u0, v0, u1, v1 = self.spritesheet.uv(cx, cy)
+        u0, v0, u1, v1 = self.spritesheet.uv(cx, cy, stitch_idx=instance.stitch)
 
         data[0] = [
             instance.pos.x, instance.pos.y, 
@@ -306,23 +306,14 @@ void main() {
         return range(len(self._instance_data))
 
 
-"""
-type _InstanceData = tuple[
-        float, # pos x
-        float, # pos y
-        int, # spritesheet cell x
-        int, # spritesheet cell y
-        skittle.color.Color, # tint color
-        float, # rotation
-        glm.vec2, # scale
-        ]"""
 class RenderInstance():
-    def __init__(self, pos: glm.vec2, spritesheet_cell: tuple[int, int], color: skittle.color.Color, rotation: float, scale: glm.vec2) -> None:
+    def __init__(self, pos: glm.vec2, spritesheet_cell: tuple[int, int], color: skittle.color.Color = skittle.color.WHITE, rotation: float = 0, scale: glm.vec2 = glm.vec2(1), stitch: int = 0) -> None:
         self.pos = pos
         self.spritesheet_cell = spritesheet_cell
         self.color = color
         self.rotation = rotation
         self.scale = scale
+        self.stitch = stitch
 
 
 class LineMesh(AbsMesh):
