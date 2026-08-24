@@ -121,7 +121,7 @@ void main() {
         self._vao.render(mode, instances=self._render_instances)
 
     def load_texture_whole(self, texture: pygame.Surface, force_size: tuple[int, int] | None = None):
-        self.release()
+        self.release(except_program=True)
 
         vertices, indices = skittle.render.gl.uv_quad(texture.width if force_size == None else force_size[0], texture.height if force_size == None else force_size[1], 0, 0, 1, 1)
         self._vbo = self._ctx.buffer(vertices)
@@ -143,7 +143,7 @@ void main() {
         layer = camera.calc_layer(layer, overlay)
         camera.submit(lambda: self._render_now(camera, position, scale, color, rotation, overlay, mode), layer)
 
-    def release(self):
+    def release(self, except_program: bool = False):
         self._vbo.release()
         if self._ibo != None:
             self._ibo.release()
@@ -152,7 +152,8 @@ void main() {
         if self._texture != None:
             self._texture.release()
 
-        self._program.release()
+        if not except_program:
+            self._program.release()
 
     
 
