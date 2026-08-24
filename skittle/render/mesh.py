@@ -74,7 +74,7 @@ void main() {
 
     def __init__(self, 
                  ctx: moderngl.Context,
-                 texture: pygame.Surface,
+                 texture: pygame.Surface | None,
                  w: int = 1,
                  h: int = 1,
                  u0: float = 0.0,
@@ -94,8 +94,8 @@ void main() {
         
         self._render_instances = -1
 
-        self._texture = skittle.render.gl.surf_texture(self._ctx, texture)
-        self._size = glm.vec2(texture.width, texture.height)
+        self._texture = skittle.render.gl.surf_texture(self._ctx, texture) if texture != None else None
+        self._size = glm.vec2(texture.width, texture.height) if texture != None else glm.vec2(0, 0)
 
     def _render_now(self, camera: skittle.camera.Camera, 
                     position: glm.vec2, 
@@ -105,6 +105,10 @@ void main() {
                     overlay: bool = False, 
                     mode: int = moderngl.TRIANGLES):
         
+        if self._texture == None:
+            skittle.err("tried to render a texture but no texture was loaded to the mesh!")
+            return
+
         self._texture.use(0)
 
         self.uniform('u_proj_view', camera.proj_view_mat(overlay).to_bytes())
@@ -116,7 +120,11 @@ void main() {
 
         self._vao.render(mode, instances=self._render_instances)
 
-    
+    def load_texture(self, texture: pygame.Surface):
+        if self._texture != None:
+            self._texture.release()
+        self._texture = skittle.render.gl.surf_texture(self._ctx, texture)
+        self._size = glm.vec2(texture.width, texture.height)
 
     def render(self, camera: skittle.camera.Camera, 
                     position: glm.vec2, 
