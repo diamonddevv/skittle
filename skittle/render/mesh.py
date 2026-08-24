@@ -17,7 +17,7 @@ class AbsMesh():
             if type(value) == bytes:
                 self._program[key].write(value) # type: ignore
                 return
-            elif value is skittle.color.Color:
+            elif isinstance(value, skittle.color.Color):
                 value = (value.r / 255, value.g / 255, value.b / 255, value.a / 255) # type: ignore
             
             self._program[key].value = value # type: ignore
@@ -120,9 +120,14 @@ void main() {
 
         self._vao.render(mode, instances=self._render_instances)
 
-    def load_texture(self, texture: pygame.Surface):
-        if self._texture != None:
-            self._texture.release()
+    def load_texture_whole(self, texture: pygame.Surface):
+        self.release()
+
+        vertices, indices = skittle.render.gl.uv_quad(texture.width, texture.height, 0, 0, 1, 1)
+        self._vbo = self._ctx.buffer(vertices)
+        self._ibo = self._ctx.buffer(indices)
+        self._vao = self._ctx.vertex_array(self._program, [(self._vbo, "2f 2f", 'in_vertex_pos', 'in_uv')], index_buffer=self._ibo)
+
         self._texture = skittle.render.gl.surf_texture(self._ctx, texture)
         self._size = glm.vec2(texture.width, texture.height)
 

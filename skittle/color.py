@@ -6,6 +6,7 @@ class Color(pygame.color.Color):
     """
     pass
 
+EMPTY =     Color(000,  000,  000, 000)
 WHITE =     Color(255,  255,  255)
 BLACK =     Color(000,  000,  000)
 RED =       Color(255,  000,  000)

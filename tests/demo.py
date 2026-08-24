@@ -10,7 +10,7 @@ from skittle.camera import Camera
 
 class Test(skittle.window.Window):
 
-    SILLY_CAT: str = "https://scontent-man2-1.cdninstagram.com/v/t51.82787-19/734277505_18079699100670346_4540329463073801635_n.jpg?stp=dst-jpg_s150x150_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby4xMDgwLmMyIn0&_nc_ht=scontent-man2-1.cdninstagram.com&_nc_cat=110&_nc_oc=Q6cZ2gFlv5UFNrhOx6DqwMFtBGZiM64kcHeiMj9lpR68h43zJJBDFceYllp_cxdZkb4Y70fSefsr1zMQbhvD6hS6ry4r&_nc_ohc=LyVrehjubiIQ7kNvwFRofv5&_nc_gid=Eli9ih48YSEaZolQaZtS6Q&edm=AP4sbd4BAAAA&ccb=7-5&oh=00_AQE8kmUI4trGzQ_MtouiUkPLzph9w1grCXNmY2_-Eyk3sg&oe=6A9161F3&_nc_sid=7a9f4b"
+    URL: str = "https://scontent-man2-1.cdninstagram.com/v/t51.82787-15/732663393_18078637844670346_2825249175333996486_n.webp?_nc_cat=111&ig_cache_key=MzkzMTA3OTMyMDE4ODQ1NzY1OQ%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=6ac--z8--C8Q7kNvwHCnNHS&_nc_oc=Adr6nO24lg9jtA1iqy4DofGIc4pEQHlIgINCljpe1pHTJiUw5HSCjYh23Uox_EbfkM_IafcN_NOOLEVEmLG0LuSY&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent-man2-1.cdninstagram.com&_nc_gid=kYchdlGzKUBJLExcIS-ekQ&_nc_ss=7a22e&oh=00_AQH4AblO-CQyfzArx__ZtEAJ30y2hXf7KcxLpP6_rEIftA&oe=6A9217BD"
 
     def __init__(self) -> None:
         super().__init__(None, "test", 1280, 720, target_fps=0, fps_in_title=True)
@@ -60,23 +60,20 @@ class Test(skittle.window.Window):
 
         skittle.audio.load_sound("scotland", "tests/asset/sound/SCOTLAND.wav")
 
-        surf = skittle.resource.image_from_url(Test.SILLY_CAT, "fynndiamond@gmail.com")
-        self.img = skittle.render.mesh.TextureMesh(self.ctx, surf, surf.width, surf.height)
+        self.urlimg = skittle.resource.image_from_url(Test.URL, "fynndiamond@gmail.com")
 
 
 
 
 
     def draw(self, ctx: moderngl.Context, camera: skittle.camera.Camera):
-                
+        ctx.clear(0, 0.8, 0.7)
 
         self.glyphxel.render(camera, f"instances: {self.many_hearts._render_instances}\nframerate: {self._clock.get_fps():.0f} fps", glm.vec2(0, -100), scale=5)
 
         self.many_hearts.render(camera, position=glm.vec2(0, 100))
 
         skittle.draw.rect(ctx, camera, self.coltest_rect, skittle.color.GREEN if self.coltest_rect.collides_point(skittle.input.get_world_mouse_pos(camera, overlay=False)) else skittle.color.RED, filled=True, overlay=False)
-
-        self.img.render(camera, glm.vec2(-400, 0))
         
     
 
