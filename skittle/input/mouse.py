@@ -2,11 +2,11 @@ from pyglm import glm
 import pygame
 import skittle
 
-LEFT_MOUSE_BUTTON: int = 1
-MIDDLE_MOUSE_BUTTON: int = 2
-RIGHT_MOUSE_BUTTON: int = 3
-MOUSE_BUTTON_4: int = 4
-MOUSE_BUTTON_5: int = 5
+LEFT_MOUSE_BUTTON: int = 0
+MIDDLE_MOUSE_BUTTON: int = 1
+RIGHT_MOUSE_BUTTON: int = 2
+MOUSE_BUTTON_4: int = 3
+MOUSE_BUTTON_5: int = 4
 
 type _ButtonsPoll = tuple[bool, bool, bool, bool, bool]
 
