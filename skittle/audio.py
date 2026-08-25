@@ -22,6 +22,9 @@ class AudioManager():
     def __init__(self) -> None:
         self._current_music_pos_ms: float = 0
         self._music_playing: bool = False
+        self._times_music_looped: int = 0
+        self._music_loops_remaining: int = 0
+        self._current_music_uid: str = ""
 
         self.sounds: dict[str, pygame.Sound] = {}
         self.music: dict[str, _MusicStream] = {}
@@ -29,6 +32,12 @@ class AudioManager():
     def update(self, dt: float):
         if self._music_playing:
             self._current_music_pos_ms += dt * 1000
+
+            if self._current_music_pos_ms > self.music[self._current_music_uid].length():
+                if self._music_loops_remaining > 0:
+                    self._music_loops_remaining -= 1
+                self._times_music_looped += 1
+                self._current_music_pos_ms = self.music[self._current_music_uid].length() - self._current_music_pos_ms
 
     def release(self):
         for uid in self.music:
@@ -67,7 +76,7 @@ def load_music(uid: str, path: str, filetype: str):
         music = _MusicStream(path, filetype)
         AudioManager.INSTANCE.music[uid] = music
 
-def play_music(uid: str, fadein_ms: int, volume: float = 0.5):
+def play_music(uid: str, fadein_ms: int, volume: float = 0.5, loops: int = -1):
     if not _assert_music_exists(uid):
         return
 
@@ -76,8 +85,11 @@ def play_music(uid: str, fadein_ms: int, volume: float = 0.5):
     pygame.mixer_music.unload()
     pygame.mixer_music.load(music._stream_data, music._filetype)
     pygame.mixer_music.set_volume(volume)
-    pygame.mixer_music.play(fade_ms=fadein_ms)
+    pygame.mixer_music.play(loops=loops, fade_ms=fadein_ms)
+    AudioManager.INSTANCE._music_loops_remaining = loops
+    AudioManager.INSTANCE._times_music_looped = 0
     AudioManager.INSTANCE._music_playing = True
+    AudioManager.INSTANCE._current_music_uid = uid
 
 def set_music_volume(vol: float = 0.5):
     pygame.mixer_music.set_volume(vol)
