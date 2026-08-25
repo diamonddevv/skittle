@@ -90,3 +90,7 @@ class Camera():
         self.frame_offset_y = viewport[1]
         self.frame_width = viewport[2]
         self.frame_height = viewport[3]
+
+
+    def frame_center(self) -> glm.vec2:
+        return glm.vec2(self.frame_width / 2, self.frame_height / 2)

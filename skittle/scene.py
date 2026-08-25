@@ -10,8 +10,13 @@ class SceneManager():
         self.ctx = ctx
         self.camera = camera
         self.window = window
-        self.active = None if initial_scene == None else initial_scene(self, ctx, camera)
-    
+        self.active = None
+
+        self._initial_scene = initial_scene
+
+    def start(self):
+        self.active = None if self._initial_scene == None else self._initial_scene(self, self.ctx, self.camera)
+
     def draw(self, ctx: moderngl.Context, camera: skittle.camera.Camera):
         if self.active != None:
             self.active.draw(ctx, camera)

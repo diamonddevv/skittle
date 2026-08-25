@@ -61,7 +61,9 @@ class Test(skittle.window.Window):
         self.post_processor.set_active("crt", False)
         self.post_processor.set_active("green", True)
 
+        
         skittle.audio.load_sound("scotland", "tests/asset/sound/SCOTLAND.wav")
+        skittle.audio.play_sound("scotland")
 
         self.tilemap = skittle.resource.Tilemap.from_json(self.ctx, "tests/asset/tilemap/map.json")
         self.tilemap.bake()

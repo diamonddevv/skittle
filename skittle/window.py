@@ -17,10 +17,8 @@ class Window():
         self.title = title
         self.target_fps = target_fps
 
-
         self._running = False
         self._fps_in_title = fps_in_title
-        self._aspect = 1 / 1
         self._window_surface = pygame.display.set_mode((width, height), pygame.RESIZABLE | pygame.OPENGL | pygame.DOUBLEBUF)
         self._clock = pygame.Clock()
 
@@ -41,6 +39,8 @@ class Window():
     def run(self):
         dt = 0.0
         self._running = True
+
+        self.scene_manager.start()
 
         while self._running:
             self.event_handle()
