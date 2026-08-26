@@ -1,10 +1,12 @@
 import pygame
+import moderngl
 
 class Color(pygame.color.Color):
     """
     wrapper around pygame's color.
     """
-    pass
+    def clear_context(self, ctx: moderngl.Context):
+        ctx.clear(*self.normalize())
 
 EMPTY =     Color(000,  000,  000, 000)
 WHITE =     Color(255,  255,  255)

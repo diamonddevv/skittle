@@ -17,6 +17,7 @@ from skittle import i18n
 from skittle import color
 from skittle import tween
 from skittle import input
+from skittle import physics
 from skittle import ui
 from skittle import draw
 from skittle import render

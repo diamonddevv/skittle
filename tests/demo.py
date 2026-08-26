@@ -59,7 +59,7 @@ class Test(skittle.window.Window):
         self.post_processor.add(skittle.render.PostProcessEffect.from_json(self.ctx, "tests/asset/postprocess/crt.json"))
         self.post_processor.add(skittle.render.PostProcessEffect.from_json(self.ctx, "tests/asset/postprocess/green.json"))
         self.post_processor.set_active("crt", False)
-        self.post_processor.set_active("green", True)
+        self.post_processor.set_active("green", False)
 
         
         skittle.audio.load_sound("scotland", "tests/asset/sound/SCOTLAND.wav")
@@ -67,6 +67,18 @@ class Test(skittle.window.Window):
 
         self.tilemap = skittle.resource.Tilemap.from_json(self.ctx, "tests/asset/tilemap/map.json")
         self.tilemap.bake()
+
+
+        self.phys_world = skittle.physics.PhysicsWorld()
+
+        self.wall_bb = skittle.physics.AABB(50, 100, static=True)
+        self.wall_bb.move(glm.vec2(300, -500))
+
+        self.physball = Physball(size=10)
+        self.physball.aabb.move(glm.vec2(0, -500))
+
+        self.phys_world.track(self.wall_bb)
+        self.phys_world.track(self.physball.aabb)
 
 
     def draw(self, ctx: moderngl.Context, camera: skittle.camera.Camera):
@@ -78,10 +90,16 @@ class Test(skittle.window.Window):
         skittle.draw.rect(ctx, camera, self.coltest_rect, skittle.color.GREEN if self.coltest_rect.collides_point(skittle.input.get_world_mouse_pos(camera, overlay=False)) else skittle.color.RED, filled=True, overlay=False)
 
         self.tilemap.render(camera, glm.vec2(-1200, 200))
+
+
+        self.wall_bb.render(ctx, camera)
+        self.physball.draw(ctx, camera)
     
 
     def update(self, dt: float, camera: Camera):
         self.age += dt
+
+        self.physball.update(dt)
 
         #for i in self.many_hearts.indexes():
         #    self.many_hearts.update_instance(i, lambda old: (old[0], old[1], old[2], old[3], old[4], old[5] + dt * glm.quarter_pi() * 5 * glm.sin(hash(str(i))), old[6]))
@@ -89,6 +107,8 @@ class Test(skittle.window.Window):
         if skittle.input.keys_click()[skittle.input.KEY_SPACE]:
             skittle.audio.play_sound('scotland', pitch=random.uniform(0.9, 1.1))
             self.post_processor.toggle_active("crt")
+
+        self.phys_world.update(dt)
 
     def handle_zoom(self, event: pygame.Event):
         if event.y == 0:
@@ -112,6 +132,25 @@ class Test(skittle.window.Window):
                 self.last_mouse_pos = current_pos
 
 
+class Physball():
+    def __init__(self, size: float = 20) -> None:
+        self.size = size
+        self.pos = glm.vec2()
+        self.aabb = skittle.physics.AABB(size*2, size*2)
+
+        self.speed = 80
+
+    def draw(self, ctx: moderngl.Context, camera: skittle.camera.Camera):
+        skittle.draw.circle(ctx, camera, self.aabb.get_pos(), self.size, skittle.color.GREEN, True)
+        self.aabb.render(ctx, camera)
+        self.aabb.render_last_pos(ctx, camera)
+
+    def update(self, dt: float):
+        self.pos = self.aabb.get_pos()
+
+        self.pos += glm.vec2(1, 0) * self.speed * dt
+
+        self.aabb.move(self.pos)
 
 
 if __name__ == "__main__":

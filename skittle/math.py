@@ -75,47 +75,14 @@ class Rect():
     def collides_point(self, vec: glm.vec2) -> bool:
         return vec.x >= self.x and vec.y >= self.y and vec.x < self.x + self.w and vec.y < self.y + self.h
 
-    def collides_aabb(self, other: Rect) -> bool:
+    def collides_rect(self, other: Rect) -> bool:
 
-        this_left = self.x
-        this_top = self.y
-        this_right = self.x + self.w
-        this_bottom = self.y + self.h
-
-        other_left = other.x
-        other_top = other.y
-        other_right = other.x + other.w
-        other_bottom = other.y + other.h
-
-        return (
-            this_left > other_left or
-            this_top < other_top or
-            this_right < other_right or
-            this_bottom > other_bottom
+        return not (
+            self.x + self.w <= other.x or
+            self.x >= other.x + other.w or
+            self.y + self.h <= other.y or
+            self.y >= other.y + other.h
         )
-
-    def aabb_correction(self, other: Rect):
-        """
-        moves self to stop colliding with other
-        """
-        this_left = self.x
-        this_top = self.y
-        this_right = self.x + self.w
-        this_bottom = self.y + self.h
-
-        other_left = other.x
-        other_top = other.y
-        other_right = other.x + other.w
-        other_bottom = other.y + other.h
-
-        if this_left > other_left:
-            self.x = other.x
-        if this_top < other_top:
-            self.y = other.y
-        if this_right < other_right:
-            self.x = other.x + other.w - self.w
-        if this_bottom > other_bottom:
-            self.y = other.y + other.h - self.h 
 
     def __str__(self) -> str:
         return ("Rect(".ljust(5) + 
