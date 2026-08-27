@@ -74,7 +74,7 @@ class Test(skittle.window.Window):
         self.wall_bb = skittle.physics.AABB(50, 100, 300, -500, static=True)
 
         self.physball = Physball(size=10)
-        self.physball.aabb.try_move(glm.vec2(0, -500))
+        self.physball.aabb.try_move(glm.vec2(800, -500))
 
         self.phys_world.track(self.wall_bb)
         self.phys_world.track(self.physball.aabb)
@@ -108,6 +108,8 @@ class Test(skittle.window.Window):
             self.post_processor.toggle_active("crt")
 
         self.phys_world.update(dt)
+
+        print(self.physball.aabb.rect.calc_overlap(self.wall_bb.rect))
 
     def handle_zoom(self, event: pygame.Event):
         if event.y == 0:
@@ -147,8 +149,8 @@ class Physball():
     def update(self, dt: float, camera: skittle.camera.Camera):
         self.pos = self.aabb.get_confirmed_pos()
 
-        self.aabb.try_move(self.pos + glm.vec2(1, 0) * self.speed * dt)
-
+        self.aabb.try_move(self.pos + glm.vec2(-1, 0) * self.speed * dt)
+        #self.aabb.try_move(skittle.input.get_world_mouse_pos(camera))
 
 if __name__ == "__main__":
     wnd = Test()

@@ -83,14 +83,17 @@ class Rect():
             self.y >= other.y + other.h
         )
     
-    def calc_overlap(self, other: Rect) -> glm.vec2:
+    def calc_overlap(self, other: Rect) -> tuple[glm.vec2, glm.vec2]:
         self_br = glm.vec2(self.x + self.w, self.y + self.h)
         other_br = glm.vec2(other.x + other.w, other.y + other.h)
 
         overlap_x = min(self_br.x, other_br.x) - max(self.x, other.x)
         overlap_y = min(self_br.y, other_br.y) - max(self.y, other.y)
 
-        return glm.vec2(overlap_x, overlap_y)
+        return glm.vec2(overlap_x, overlap_y), glm.vec2(
+            1 if (self.x >= other.x) else -1,
+            1 if (self.y >= other.y) else -1
+        )
 
     def __str__(self) -> str:
         return ("Rect(".ljust(5) + 

@@ -43,9 +43,9 @@ class PhysicsWorld():
                     continue
 
                 if aabb.rect.collides_rect(other.rect) and not aabb._static:
-                    overlap = aabb.rect.calc_overlap(other.rect)
+                    overlap, polarity = aabb.rect.calc_overlap(other.rect)
 
-                    aabb.try_move(aabb._pos - glm.vec2(
+                    aabb.try_move(aabb._pos + polarity * glm.vec2(
                         overlap.x if overlap.x <= overlap.y else 0,
                         overlap.y if overlap.y <= overlap.x else 0
                     ))
