@@ -4,39 +4,31 @@ from pyglm import glm
 
 class AABB():
     def __init__(self, width: float, height: float, x: float = 0, y: float = 0, static: bool = False) -> None:
-        self.rect = skittle.math.Rect(x, y, width, height)
+        self.rect = skittle.math.Rect(x - width/2, y -height/2, width, height)
         
-        self._pos = self.get_pos()
-        self._last_pos = self._pos
-        
+        self._pos = glm.vec2(x, y)
+        self._pos_dirty = False
+
         self._static = static
 
-    def move(self, pos: glm.vec2):
-        self._last_pos = self._pos
+    def try_move(self, pos: glm.vec2):
         self._pos = pos
+        self._pos_dirty = True
 
-        self.rect.x = pos.x - self.rect.w / 2
-        self.rect.y = pos.y - self.rect.h / 2
+        self.rect.x = self._pos.x - self.rect.w / 2
+        self.rect.y = self._pos.y - self.rect.h / 2
 
+    def get_confirmed_pos(self) -> glm.vec2:
+        return self._pos
 
-    def get_pos(self) -> glm.vec2:
-        return glm.vec2(
-            self.rect.x + self.rect.w / 2,
-            self.rect.y + self.rect.h / 2
-        )
-
-    def render(self, ctx: moderngl.Context, camera: skittle.camera.Camera):
-        skittle.draw.rect(ctx, camera, self.rect, skittle.color.RED, outline_width=4, layer=10)
-
-    def render_last_pos(self, ctx: moderngl.Context, camera: skittle.camera.Camera):
-        skittle.draw.rect(ctx, camera, skittle.math.Rect(
-            self._last_pos.x - self.rect.w / 2, 
-            self._last_pos.y - self.rect.h / 2,
-            self.rect.w,
-            self.rect.h
-        ), skittle.color.BLUE, outline_width=4, layer=10)
+    def _render_bounding_box(self, ctx: moderngl.Context, camera: skittle.camera.Camera, layer: int = 10, overlay: bool = False):
+        skittle.draw.rect(ctx, camera, self.rect, skittle.color.RED, outline_width=4, layer=layer, overlay=overlay)
 
 class PhysicsWorld():
+    """
+    this is so ass ill replace it with pymunk or something later
+    """
+
     def __init__(self) -> None: 
         self._aabbs: list[AABB] = []
 
@@ -51,5 +43,9 @@ class PhysicsWorld():
                     continue
 
                 if aabb.rect.collides_rect(other.rect) and not aabb._static:
-                    # resolve.
-                    pass
+                    overlap = aabb.rect.calc_overlap(other.rect)
+
+                    aabb.try_move(aabb._pos - glm.vec2(
+                        overlap.x if overlap.x <= overlap.y else 0,
+                        overlap.y if overlap.y <= overlap.x else 0
+                    ))

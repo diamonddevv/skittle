@@ -71,11 +71,10 @@ class Test(skittle.window.Window):
 
         self.phys_world = skittle.physics.PhysicsWorld()
 
-        self.wall_bb = skittle.physics.AABB(50, 100, static=True)
-        self.wall_bb.move(glm.vec2(300, -500))
+        self.wall_bb = skittle.physics.AABB(50, 100, 300, -500, static=True)
 
         self.physball = Physball(size=10)
-        self.physball.aabb.move(glm.vec2(0, -500))
+        self.physball.aabb.try_move(glm.vec2(0, -500))
 
         self.phys_world.track(self.wall_bb)
         self.phys_world.track(self.physball.aabb)
@@ -92,14 +91,14 @@ class Test(skittle.window.Window):
         self.tilemap.render(camera, glm.vec2(-1200, 200))
 
 
-        self.wall_bb.render(ctx, camera)
+        self.wall_bb._render_bounding_box(ctx, camera)
         self.physball.draw(ctx, camera)
     
 
     def update(self, dt: float, camera: Camera):
         self.age += dt
 
-        self.physball.update(dt)
+        self.physball.update(dt, camera)
 
         #for i in self.many_hearts.indexes():
         #    self.many_hearts.update_instance(i, lambda old: (old[0], old[1], old[2], old[3], old[4], old[5] + dt * glm.quarter_pi() * 5 * glm.sin(hash(str(i))), old[6]))
@@ -139,18 +138,16 @@ class Physball():
         self.aabb = skittle.physics.AABB(size*2, size*2)
 
         self.speed = 80
+        self.accel = 10
 
     def draw(self, ctx: moderngl.Context, camera: skittle.camera.Camera):
-        skittle.draw.circle(ctx, camera, self.aabb.get_pos(), self.size, skittle.color.GREEN, True)
-        self.aabb.render(ctx, camera)
-        self.aabb.render_last_pos(ctx, camera)
+        skittle.draw.circle(ctx, camera, self.aabb.get_confirmed_pos(), self.size, skittle.color.GREEN, True)
+        self.aabb._render_bounding_box(ctx, camera)
 
-    def update(self, dt: float):
-        self.pos = self.aabb.get_pos()
+    def update(self, dt: float, camera: skittle.camera.Camera):
+        self.pos = self.aabb.get_confirmed_pos()
 
-        self.pos += glm.vec2(1, 0) * self.speed * dt
-
-        self.aabb.move(self.pos)
+        self.aabb.try_move(self.pos + glm.vec2(1, 0) * self.speed * dt)
 
 
 if __name__ == "__main__":

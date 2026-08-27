@@ -76,13 +76,21 @@ class Rect():
         return vec.x >= self.x and vec.y >= self.y and vec.x < self.x + self.w and vec.y < self.y + self.h
 
     def collides_rect(self, other: Rect) -> bool:
-
         return not (
             self.x + self.w <= other.x or
             self.x >= other.x + other.w or
             self.y + self.h <= other.y or
             self.y >= other.y + other.h
         )
+    
+    def calc_overlap(self, other: Rect) -> glm.vec2:
+        self_br = glm.vec2(self.x + self.w, self.y + self.h)
+        other_br = glm.vec2(other.x + other.w, other.y + other.h)
+
+        overlap_x = min(self_br.x, other_br.x) - max(self.x, other.x)
+        overlap_y = min(self_br.y, other_br.y) - max(self.y, other.y)
+
+        return glm.vec2(overlap_x, overlap_y)
 
     def __str__(self) -> str:
         return ("Rect(".ljust(5) + 
