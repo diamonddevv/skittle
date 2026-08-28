@@ -4,16 +4,26 @@ import moderngl
 from pyglm import glm
 
 
-def uv_quad(w: int = 1, h: int = 1, u0: float = 0.0, v0: float = 0.0, u1: float = 1.0, v1: float = 1.0) -> tuple[bytes, bytes]:
+def uv_quad(w: int = 1, h: int = 1, u0: float = 0.0, v0: float = 0.0, u1: float = 1.0, v1: float = 1.0, no_uv: bool = False) -> tuple[bytes, bytes]:
     hw = w / 2
     hh = h / 2
 
-    vertices = [
-        -hw,  hh, u0, v0, # top left
-         hw,  hh, u1, v0, # top right
-         hw, -hh, u1, v1, # bottom right
-        -hw, -hh, u0, v1, # bottom left
-                ]
+    vertices = []
+
+    if no_uv:
+        vertices = [
+            -hw,  hh, # top left
+             hw,  hh, # top right
+             hw, -hh, # bottom right
+            -hw, -hh, # bottom left
+            ]
+    else:
+        vertices = [
+            -hw,  hh, u0, v0, # top left
+             hw,  hh, u1, v0, # top right
+             hw, -hh, u1, v1, # bottom right
+            -hw, -hh, u0, v1, # bottom left
+                    ]
     
     indices = [
         0, 1, 2,

@@ -58,8 +58,7 @@ class Test(skittle.window.Window):
 
         self.post_processor.add(skittle.render.PostProcessEffect.from_json(self.ctx, "tests/asset/postprocess/crt.json"))
         self.post_processor.add(skittle.render.PostProcessEffect.from_json(self.ctx, "tests/asset/postprocess/green.json"))
-        self.post_processor.set_active("crt", False)
-        self.post_processor.set_active("green", False)
+        self.post_processor.set_active("crt", True)
 
         
         skittle.audio.load_sound("scotland", "tests/asset/sound/SCOTLAND.wav")

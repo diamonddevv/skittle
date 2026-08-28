@@ -183,14 +183,11 @@ class PostProcessEffect():
 #version 330
 
 in vec2 in_pos;
-in vec2 in_uv;
 
 uniform float u_time;
 
-out vec2 v_uv;
 
 void main() {
-    v_uv = vec2(in_uv.x, -in_uv.y);
     gl_Position = vec4(in_pos, 0.0, 1.0);
 }
 """
@@ -207,10 +204,10 @@ void main() {
         self._samplers: list[moderngl.Texture] = []
         self._build_use_sampler_textures(sampler_paths)
 
-        vertices, indices = skittle.render.gl.uv_quad(2, 2)
+        vertices, indices = skittle.render.gl.uv_quad(2, 2, no_uv=True)
         self._vbo = ctx.buffer(vertices)
         self._ibo = ctx.buffer(indices)
-        self._vao = ctx.vertex_array(self._program, [(self._vbo, '2f 2f', 'in_pos', 'in_uv')], index_buffer=self._ibo)
+        self._vao = ctx.vertex_array(self._program, [(self._vbo, '2f', 'in_pos')], index_buffer=self._ibo)
 
     def _build_use_sampler_textures(self, sampler_paths: list[str]):
         for i, path in enumerate(sampler_paths):
