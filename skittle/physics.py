@@ -41,9 +41,11 @@ class PhysicsWorld():
 
 
 class PhysicsObject():
-    def __init__(self, width: float, height: float, x: float = 0, y: float = 0, static: bool = False, report_only: bool = False) -> None:
+    def __init__(self, width: float, height: float, owner: object, x: float = 0, y: float = 0, static: bool = False, report_only: bool = False) -> None:
 
         self._id: int | None = None
+        self.owner = owner
+
         self._pos = glm.vec2(x, y)
         self.rect = skittle.math.Rect(x - width/2, y -height/2, width, height)
         self._static = static
@@ -59,6 +61,12 @@ class PhysicsObject():
 
     def get_confirmed_pos(self) -> glm.vec2:
         return self._pos
+
+    def owner_is(self, clazz: type) -> bool:
+        return isinstance(self.owner, clazz)
+
+    def get_owner(self):
+        return self.owner
 
     def _render_bounding_box(self, ctx: moderngl.Context, camera: skittle.camera.Camera, layer: int = 10, overlay: bool = False):
         skittle.draw.rect(ctx, camera, self.rect, skittle.color.RED, outline_width=4, layer=layer, overlay=overlay)
