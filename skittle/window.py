@@ -9,6 +9,7 @@ class Window():
                  initial_scene: skittle.scene.SceneSwitch | None,
                  title: str = "skittle engine", 
                  width: int = 1280, height: int = 720,
+                 window_width: int = 1280, window_height: int = 720,
 
                  target_fps: int = 60,
                  icon_path: str = "",
@@ -19,7 +20,8 @@ class Window():
 
         self._running = False
         self._fps_in_title = fps_in_title
-        self._window_surface = pygame.display.set_mode((width, height), pygame.RESIZABLE | pygame.OPENGL | pygame.DOUBLEBUF)
+        self._window_size = (window_width, window_height)
+        self._window_surface = pygame.display.set_mode((window_width, window_height), pygame.RESIZABLE | pygame.OPENGL | pygame.DOUBLEBUF)
         self._clock = pygame.Clock()
 
         self.ctx = moderngl.create_context()

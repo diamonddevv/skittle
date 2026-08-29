@@ -1,6 +1,6 @@
 {
     "effect_uid": "crt",
-    "vertex_shader": "tests/asset/postprocess/crt.glsl",
+    "shader": "tests/asset/postprocess/crt.glsl",
 
     "uniform_param_defaults": {
         "u_warping": 0.55,

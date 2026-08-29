@@ -26,7 +26,6 @@ class PostProcessor():
         self.pong_tex: moderngl.Texture
 
         self.window_size = (width, height)
-        self.vp_size = (width, height)
         self.viewport = self._compute_viewport(*self.window_size)
 
         self._make_buffers()
@@ -48,9 +47,6 @@ class PostProcessor():
         """updates viewport"""
         self.window_size = (width, height)
         self.viewport = self._compute_viewport(width, height)
-        self.vp_size = (self.viewport[2], self.viewport[3])
-        self.release(all=False)
-        self._make_buffers()
 
     def _make_presentation_prog(self):
         vertices = np.array(
@@ -103,9 +99,9 @@ class PostProcessor():
         self._make_buffers()
 
     def _make_fbo(self) -> tuple[moderngl.Framebuffer, moderngl.Texture]:
-        tex = self.ctx.texture(self.vp_size, 4)
+        tex = self.ctx.texture((self.width, self.height), 4)
         tex.filter = (moderngl.LINEAR, moderngl.LINEAR)
-        depth = self.ctx.depth_renderbuffer(self.vp_size)
+        depth = self.ctx.depth_renderbuffer((self.width, self.height))
         fbo = self.ctx.framebuffer(color_attachments=[tex], depth_attachment=depth)
         return fbo, tex
 
@@ -131,7 +127,7 @@ class PostProcessor():
         for i, uid in enumerate(self._effects):
             if self._effects[uid].active:
                 target = buffers[i % 2]
-                self._effects[uid].render(src_tex, target, *self.vp_size)
+                self._effects[uid].render(src_tex, target, self.width, self.height)
                 src_tex = textures[i % 2]
 
         self._present(src_tex)
@@ -246,13 +242,13 @@ void main() {
         with open(filepath, 'rb') as f:
             data = json.load(f)
 
-        with open(data["vertex_shader"], 'r') as f:
-            vertex = f.read()
+        with open(data["shader"], 'r') as f:
+            shader = f.read()
 
         effect = PostProcessEffect(
             ctx,
             data["effect_uid"],
-            vertex,
+            shader,
             params=data.get("uniform_param_defaults", {}),
             sampler_paths=data.get("samplers", [])
         )

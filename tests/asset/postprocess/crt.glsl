@@ -1,7 +1,5 @@
 #version 330
 
-in vec2 v_uv;
-
 out vec4 fragColor;
 
 uniform sampler2D u_screen_texture;
@@ -34,7 +32,7 @@ void main()
     else
     {
         // determine if we are drawing in a scanline
-        float apply = abs(sin(v_uv.y * u_scanline_resolution_height) * 0.5 * u_scanline_darkness);
+        float apply = abs(sin(uv.y * u_scanline_resolution_height) * 0.5 * u_scanline_darkness);
         // sample the texture
         fragColor = vec4(mix(texture(u_screen_texture, uv).rgb, vec3(0.0), apply), 1.0);
     }

@@ -13,7 +13,7 @@ class Test(skittle.window.Window):
     URL: str = "https://scontent-man2-1.cdninstagram.com/v/t51.82787-15/732663393_18078637844670346_2825249175333996486_n.webp?_nc_cat=111&ig_cache_key=MzkzMTA3OTMyMDE4ODQ1NzY1OQ%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=6ac--z8--C8Q7kNvwHCnNHS&_nc_oc=Adr6nO24lg9jtA1iqy4DofGIc4pEQHlIgINCljpe1pHTJiUw5HSCjYh23Uox_EbfkM_IafcN_NOOLEVEmLG0LuSY&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent-man2-1.cdninstagram.com&_nc_gid=kYchdlGzKUBJLExcIS-ekQ&_nc_ss=7a22e&oh=00_AQH4AblO-CQyfzArx__ZtEAJ30y2hXf7KcxLpP6_rEIftA&oe=6A9217BD"
 
     def __init__(self) -> None:
-        super().__init__(None, "test", 1280, 720, target_fps=0, fps_in_title=True)
+        super().__init__(None, "test", 1280, 720, target_fps=60, fps_in_title=True)
         self.age = 0.0
 
         self.hearts = skittle.resource.spritesheet("tests/asset/spritesheet.png")
@@ -70,16 +70,17 @@ class Test(skittle.window.Window):
 
         self.phys_world = skittle.physics.PhysicsWorld()
 
-        self.wall_bb = skittle.physics.AABB(50, 100, 300, -500, static=True)
+        self.wall_bb = skittle.physics.PhysicsObject(50, 100, 300, -500, static=True)
 
         self.physball = Physball(size=10)
-        self.physball.aabb.try_move(glm.vec2(800, -500))
+        self.physball.physobj.try_move(glm.vec2(800, -500))
 
         self.phys_world.track(self.wall_bb)
-        self.phys_world.track(self.physball.aabb)
+        self.phys_world.track(self.physball.physobj)
 
 
     def draw(self, ctx: moderngl.Context, camera: skittle.camera.Camera):
+        self.ctx.clear(1, 0, 1, 1)
 
         self.glyphxel.render(camera, f"instances: {self.many_hearts._render_instances}\nframerate: {self._clock.get_fps():.0f} fps", glm.vec2(0, -100), scale=5)
 
@@ -108,7 +109,7 @@ class Test(skittle.window.Window):
 
         self.phys_world.update(dt)
 
-        print(self.physball.aabb.rect.calc_overlap(self.wall_bb.rect))
+        print(f"aspect is 16:9? {self.post_processor.aspect == 16/9} ({self.post_processor.aspect})")
 
     def handle_zoom(self, event: pygame.Event):
         if event.y == 0:
@@ -136,20 +137,24 @@ class Physball():
     def __init__(self, size: float = 20) -> None:
         self.size = size
         self.pos = glm.vec2()
-        self.aabb = skittle.physics.AABB(size*2, size*2)
+        self.physobj = skittle.physics.PhysicsObject(size*2, size*2, report_only=False)
+        self.physobj.collision_signal.bind(self.on_collide)
 
         self.speed = 80
         self.accel = 10
 
     def draw(self, ctx: moderngl.Context, camera: skittle.camera.Camera):
-        skittle.draw.circle(ctx, camera, self.aabb.get_confirmed_pos(), self.size, skittle.color.GREEN, True)
-        self.aabb._render_bounding_box(ctx, camera)
+        skittle.draw.circle(ctx, camera, self.physobj.get_confirmed_pos(), self.size, skittle.color.GREEN, True)
+        self.physobj._render_bounding_box(ctx, camera)
 
     def update(self, dt: float, camera: skittle.camera.Camera):
-        self.pos = self.aabb.get_confirmed_pos()
+        self.pos = self.physobj.get_confirmed_pos()
 
-        self.aabb.try_move(self.pos + glm.vec2(-1, 0) * self.speed * dt)
-        #self.aabb.try_move(skittle.input.get_world_mouse_pos(camera))
+        self.physobj.try_move(self.pos + glm.vec2(-1, 0) * self.speed * dt)
+        #self.physobj.try_move(skittle.input.get_world_mouse_pos(camera))
+
+    def on_collide(self, other: skittle.physics.PhysicsObject):
+        print(f"hit: {other._id} and i am {self.physobj._id}")
 
 if __name__ == "__main__":
     wnd = Test()

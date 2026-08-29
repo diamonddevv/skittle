@@ -88,8 +88,6 @@ class Camera():
     def reframe(self, viewport: tuple[int, int, int, int]):
         self.frame_offset_x = viewport[0]
         self.frame_offset_y = viewport[1]
-        self.frame_width = viewport[2]
-        self.frame_height = viewport[3]
 
 
     def frame_center(self) -> glm.vec2:
