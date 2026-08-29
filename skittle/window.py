@@ -30,8 +30,8 @@ class Window():
         pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MINOR_VERSION, skittle.__GLSL_MINOR__)
         skittle.draw._Meshes._init(self.ctx)
 
-        self.camera = skittle.camera.Camera(width, height, window_width, window_height)
         self.post_processor = skittle.render.PostProcessor(self.ctx, width, height, window_width, window_height)
+        self.camera = skittle.camera.Camera(width, height, self.post_processor.viewport)
         self.scene_manager = skittle.scene.SceneManager(self.ctx, self.camera, initial_scene, self)
 
         if icon_path != "":
@@ -79,6 +79,7 @@ class Window():
                 self.ctx.viewport = (0, 0, e.w, e.h)
                 self._window_size = (e.w, e.h)
                 self.post_processor.resize_viewport(e.w, e.h)
+                print(*self._window_size)
                 self.camera.reframe(self.post_processor.viewport)
 
             skittle.input.TextInput._textinput_event(e)

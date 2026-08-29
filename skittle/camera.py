@@ -6,13 +6,14 @@ import skittle
 class Camera():
     type _Submission = typing.Callable[[], typing.Any]
 
-    def __init__(self, width: int, height: int, window_width: int, window_height: int, zoom: float = 1.0) -> None:
-        self.frame_offset_x = 0
-        self.frame_offset_y = 0
+    def __init__(self, width: int, height: int, postproc_vp: tuple[int, int, int, int], zoom: float = 1.0) -> None:
         self.frame_width = width
         self.frame_height = height
-        self.window_width = window_width
-        self.window_height = window_height
+
+        self.frame_offset_x = postproc_vp[0]
+        self.frame_offset_y = postproc_vp[1]
+        self.window_width = postproc_vp[2]
+        self.window_height = postproc_vp[3]
 
         self.zoom = zoom
         self.rotation = 0.0

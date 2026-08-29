@@ -13,7 +13,7 @@ class Test(skittle.window.Window):
     URL: str = "https://scontent-man2-1.cdninstagram.com/v/t51.82787-15/732663393_18078637844670346_2825249175333996486_n.webp?_nc_cat=111&ig_cache_key=MzkzMTA3OTMyMDE4ODQ1NzY1OQ%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=6ac--z8--C8Q7kNvwHCnNHS&_nc_oc=Adr6nO24lg9jtA1iqy4DofGIc4pEQHlIgINCljpe1pHTJiUw5HSCjYh23Uox_EbfkM_IafcN_NOOLEVEmLG0LuSY&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent-man2-1.cdninstagram.com&_nc_gid=kYchdlGzKUBJLExcIS-ekQ&_nc_ss=7a22e&oh=00_AQH4AblO-CQyfzArx__ZtEAJ30y2hXf7KcxLpP6_rEIftA&oe=6A9217BD"
 
     def __init__(self) -> None:
-        super().__init__(None, "test", 1280, 720, target_fps=60, fps_in_title=True)
+        super().__init__(None, "test", 500, 500, 500, 500, target_fps=60, fps_in_title=True)
         self.age = 0.0
 
         self.hearts = skittle.resource.spritesheet("tests/asset/spritesheet.png")
@@ -90,6 +90,8 @@ class Test(skittle.window.Window):
 
         self.tilemap.render(camera, glm.vec2(-1200, 200))
 
+        skittle.draw.circle(ctx, camera, skittle.input.get_world_mouse_pos(camera), 10, skittle.color.YELLOW, True)
+        skittle.draw.circle(ctx, camera, skittle.input.get_world_mouse_pos(camera, True), 6, skittle.color.CYAN, True, layer=2, overlay=True)
 
         self.wall_bb._render_bounding_box(ctx, camera)
         self.physball.draw(ctx, camera)
@@ -109,8 +111,7 @@ class Test(skittle.window.Window):
 
         self.phys_world.update(dt)
 
-        print(f"aspect is 16:9? {self.post_processor.aspect == 16/9} ({self.post_processor.aspect})")
-
+        
     def handle_zoom(self, event: pygame.Event):
         if event.y == 0:
             return

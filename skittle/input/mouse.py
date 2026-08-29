@@ -20,9 +20,12 @@ def buttons_released() -> _ButtonsPoll:
     return pygame.mouse.get_just_released()
 
 def get_world_mouse_pos(cam: skittle.camera.Camera, overlay: bool = False) -> glm.vec2:
-    pg = pygame.mouse.get_pos()
+    rx, ry = pygame.mouse.get_pos()
+
+    px = (rx - cam.frame_offset_x) * (cam.frame_width / cam.window_width)
+    py = (ry - cam.frame_offset_y) * (cam.frame_height / cam.window_height)
 
     return glm.vec2(
-        ((pg[0] - cam.frame_offset_x - (cam.window_width / 2 if not overlay else 0)) / (cam.zoom if not overlay else 1)) + (cam.position.x if not overlay else 0), 
-        ((pg[1] - cam.frame_offset_y - (cam.window_height / 2 if not overlay else 0)) / (cam.zoom if not overlay else 1)) - (cam.position.y if not overlay else 0)
+        ((px - (cam.frame_width / 2 if not overlay else 0)) / (cam.zoom if not overlay else 1)) + (cam.position.x if not overlay else 0), 
+        ((py - (cam.frame_height / 2 if not overlay else 0)) / (cam.zoom if not overlay else 1)) - (cam.position.y if not overlay else 0)
         )
