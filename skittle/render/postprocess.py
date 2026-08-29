@@ -9,7 +9,7 @@ from pyglm import glm
 
 
 class PostProcessor():
-    def __init__(self, ctx: moderngl.Context, width: int, height: int) -> None:
+    def __init__(self, ctx: moderngl.Context, width: int, height: int, window_width: int, window_height: int) -> None:
         self.ctx = ctx
         self.width = width
         self.height = height
@@ -25,7 +25,7 @@ class PostProcessor():
         self.ping_tex: moderngl.Texture
         self.pong_tex: moderngl.Texture
 
-        self.window_size = (width, height)
+        self.window_size = (window_width, window_height)
         self.viewport = self._compute_viewport(*self.window_size)
 
         self._make_buffers()

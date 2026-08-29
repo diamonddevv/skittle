@@ -6,11 +6,13 @@ import skittle
 class Camera():
     type _Submission = typing.Callable[[], typing.Any]
 
-    def __init__(self, width: int, height: int, zoom: float = 1.0) -> None:
+    def __init__(self, width: int, height: int, window_width: int, window_height: int, zoom: float = 1.0) -> None:
         self.frame_offset_x = 0
         self.frame_offset_y = 0
         self.frame_width = width
         self.frame_height = height
+        self.window_width = window_width
+        self.window_height = window_height
 
         self.zoom = zoom
         self.rotation = 0.0
@@ -88,6 +90,8 @@ class Camera():
     def reframe(self, viewport: tuple[int, int, int, int]):
         self.frame_offset_x = viewport[0]
         self.frame_offset_y = viewport[1]
+        self.window_width = viewport[2]
+        self.window_height = viewport[3]
 
 
     def frame_center(self) -> glm.vec2:

@@ -23,6 +23,6 @@ def get_world_mouse_pos(cam: skittle.camera.Camera, overlay: bool = False) -> gl
     pg = pygame.mouse.get_pos()
 
     return glm.vec2(
-        ((pg[0] - cam.frame_offset_x - (cam.frame_width / 2 if not overlay else 0)) / (cam.zoom if not overlay else 1)) + (cam.position.x if not overlay else 0), 
-        ((pg[1] - cam.frame_offset_y - (cam.frame_height / 2 if not overlay else 0)) / (cam.zoom if not overlay else 1)) - (cam.position.y if not overlay else 0)
+        ((pg[0] - cam.frame_offset_x - (cam.window_width / 2 if not overlay else 0)) / (cam.zoom if not overlay else 1)) + (cam.position.x if not overlay else 0), 
+        ((pg[1] - cam.frame_offset_y - (cam.window_height / 2 if not overlay else 0)) / (cam.zoom if not overlay else 1)) - (cam.position.y if not overlay else 0)
         )
