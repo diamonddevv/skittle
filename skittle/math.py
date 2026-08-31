@@ -59,6 +59,12 @@ def n_gon_vertices(origin: glm.vec2, n: int, r: float, offset: float = 0.0) -> l
             origin.y + r * glm.sin((glm.two_pi() * i) / n + offset)
         ) for i in range(n)]
 
+def vec2rad(v: glm.vec2) -> float:
+    return glm.atan(v.y, v.x)
+
+def rad2vec(r: float) -> glm.vec2:
+    return glm.vec2(glm.cos(r), glm.sin(r))
+
 class Rect():
     def __init__(self, x: float, y: float, w: float, h: float) -> None:
         self.x = x
