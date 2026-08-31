@@ -13,7 +13,7 @@ class Test(skittle.window.Window):
     URL: str = "https://scontent-man2-1.cdninstagram.com/v/t51.82787-15/732663393_18078637844670346_2825249175333996486_n.webp?_nc_cat=111&ig_cache_key=MzkzMTA3OTMyMDE4ODQ1NzY1OQ%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=6ac--z8--C8Q7kNvwHCnNHS&_nc_oc=Adr6nO24lg9jtA1iqy4DofGIc4pEQHlIgINCljpe1pHTJiUw5HSCjYh23Uox_EbfkM_IafcN_NOOLEVEmLG0LuSY&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent-man2-1.cdninstagram.com&_nc_gid=kYchdlGzKUBJLExcIS-ekQ&_nc_ss=7a22e&oh=00_AQH4AblO-CQyfzArx__ZtEAJ30y2hXf7KcxLpP6_rEIftA&oe=6A9217BD"
 
     def __init__(self) -> None:
-        super().__init__(None, "test", 500, 500, 500, 500, target_fps=60, fps_in_title=True)
+        super().__init__(None, "test", target_fps=60, fps_in_title=True)
         self.age = 0.0
 
         self.hearts = skittle.resource.spritesheet("tests/asset/spritesheet.png")
@@ -57,8 +57,7 @@ class Test(skittle.window.Window):
         )
 
         self.post_processor.add(skittle.render.PostProcessEffect.from_json(self.ctx, "tests/asset/postprocess/crt.json"))
-        self.post_processor.add(skittle.render.PostProcessEffect.from_json(self.ctx, "tests/asset/postprocess/green.json"))
-        self.post_processor.set_active("crt", True)
+        self.post_processor.set_active("crt", False)
 
         
         skittle.audio.load_sound("scotland", "tests/asset/sound/SCOTLAND.wav")
@@ -70,7 +69,7 @@ class Test(skittle.window.Window):
 
         self.phys_world = skittle.physics.PhysicsWorld()
 
-        self.wall_bb = skittle.physics.PhysicsObject(50, 100, 300, -500, static=True)
+        self.wall_bb = skittle.physics.PhysicsObject(50, 100, "wall", self, 300, -500, static=True)
 
         self.physball = Physball(size=10)
         self.physball.physobj.try_move(glm.vec2(800, -500))
@@ -78,9 +77,11 @@ class Test(skittle.window.Window):
         self.phys_world.track(self.wall_bb)
         self.phys_world.track(self.physball.physobj)
 
+        self.tween_pos = glm.vec2(500, -1000)
+
 
     def draw(self, ctx: moderngl.Context, camera: skittle.camera.Camera):
-        self.ctx.clear(1, 0, 1, 1)
+        self.ctx.clear(1, 0.6, 0.2, 1)
 
         self.glyphxel.render(camera, f"instances: {self.many_hearts._render_instances}\nframerate: {self._clock.get_fps():.0f} fps", glm.vec2(0, -100), scale=5)
 
@@ -95,6 +96,8 @@ class Test(skittle.window.Window):
 
         self.wall_bb._render_bounding_box(ctx, camera)
         self.physball.draw(ctx, camera)
+
+        skittle.draw.circle(ctx, camera, self.tween_pos, 12, skittle.color.BLACK)
     
 
     def update(self, dt: float, camera: Camera):
@@ -105,11 +108,13 @@ class Test(skittle.window.Window):
         #for i in self.many_hearts.indexes():
         #    self.many_hearts.update_instance(i, lambda old: (old[0], old[1], old[2], old[3], old[4], old[5] + dt * glm.quarter_pi() * 5 * glm.sin(hash(str(i))), old[6]))
 
-        if skittle.input.keys_click()[skittle.input.KEY_SPACE]:
-            skittle.audio.play_sound('scotland', pitch=random.uniform(0.9, 1.1))
-            self.post_processor.toggle_active("crt")
+        keyclick = skittle.input.keys_click()
+        if keyclick[skittle.input.KEY_SPACE]: skittle.audio.play_sound('scotland', pitch=random.uniform(0.9, 1.1))
+        if keyclick[skittle.input.KEY_s]: self.post_processor.toggle_active("crt")
+        if keyclick[skittle.input.KEY_t]: skittle.tween.tween(self.tween_pos, self, "tween_pos", 3, self.tween_pos + glm.vec2(-1400, 500), skittle.tween.EASE_LINEAR)
 
         self.phys_world.update(dt)
+        skittle.tween.update_tweens(dt)
 
         
     def handle_zoom(self, event: pygame.Event):
@@ -138,7 +143,7 @@ class Physball():
     def __init__(self, size: float = 20) -> None:
         self.size = size
         self.pos = glm.vec2()
-        self.physobj = skittle.physics.PhysicsObject(size*2, size*2, report_only=False)
+        self.physobj = skittle.physics.PhysicsObject(size*2, size*2, "physball", self, report_only=False)
         self.physobj.collision_signal.bind(self.on_collide)
 
         self.speed = 80

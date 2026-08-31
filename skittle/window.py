@@ -67,6 +67,7 @@ class Window():
 
     def update(self, dt: float, camera: skittle.camera.Camera):
         self.scene_manager.update(dt, camera)
+        skittle.tween.update_tweens(dt)
 
     def draw(self, ctx: moderngl.Context, camera: skittle.camera.Camera):
         self.scene_manager.draw(ctx, camera)

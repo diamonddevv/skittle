@@ -1,21 +1,24 @@
 from __future__ import annotations
+from pyglm import glm
 import skittle
 import typing
 import time
 import math
 
-type _Tweener = typing.Callable[[float], float] # f(t) = x
+type _Easing = typing.Callable[[float], float] # f(t) = x
+type _Tweenable = float | glm.vec2
 
-class _Tween():
-    TWEENER_DONT: _Tweener = lambda t: 0
-    TWEENER_EASE_LINEAR: _Tweener = lambda t: t
-    TWEENER_EASE_IN_EXP: _Tweener = lambda t: 0 if t == 0 else math.pow(2, 10 * t - 10)
-    TWEENER_EASE_OUT_EXP: _Tweener = lambda t: 1 if t == 1 else 1 - math.pow(2, -10 * t)
+EASE_DONT: _Easing = lambda t: 0
+EASE_LINEAR: _Easing = lambda t: t
+EASE_IN_EXP: _Easing = lambda t: 0 if t == 0 else math.pow(2, 10 * t - 10)
+EASE_OUT_EXP: _Easing = lambda t: 1 if t == 1 else 1 - math.pow(2, -10 * t)
+
+class _Tween[T: _Tweenable]():
 
     NEXT_TWEEN_ID: int = 0
     TWEENS: dict[int, _Tween] = {}
 
-    def __init__(self, idx: int, initial: float, target: float, object: object, attribute: str, duration: float, tweener: _Tweener, delay: float = 0.0, depends: int = -1) -> None:
+    def __init__(self, idx: int, initial: T, target: T, object: object, attribute: str, duration: float, tweener: _Easing, delay: float = 0.0, depends: int = -1) -> None:
         
         self.idx = idx
         self.initial = initial
@@ -36,7 +39,8 @@ class _Tween():
             self.start_if_needed()
 
             t = self.tweener((time.time() - self.starttime - self.delay) / self.duration)
-            value = skittle.math.lerpf(self.initial, self.target, t)
+            interpolator = _get_interpolator_for_tweenable(self.initial)
+            value = interpolator(self.initial, self.target, t)
             self.set_value(value)
 
             if (time.time() - self.starttime - self.delay) >= self.duration:
@@ -54,7 +58,7 @@ class _Tween():
     def delete_self(self):
         del _Tween.TWEENS[self.idx]
 
-    def set_value(self, value: float):
+    def set_value(self, value: _Tweenable):
         if self.object != None:
             if self.attribute in dir(self.object):
                 self.object.__setattr__(self.attribute, value)
@@ -62,8 +66,8 @@ class _Tween():
                 skittle.err(f"no attribute '{self.attribute}' in tweened object {self.object}")
 
 class _ConstantTween(_Tween):
-    def __init__(self, idx: int, initial: float, object: object, attribute: str, speed: float, duration: float, delay: float = 0.0, depends: int = -1) -> None:
-        super().__init__(idx, initial, -1, object, attribute, duration, _Tween.TWEENER_DONT, delay, depends)
+    def __init__(self, idx: int, initial: _Tweenable, object: object, attribute: str, speed: float, duration: float, delay: float = 0.0, depends: int = -1) -> None:
+        super().__init__(idx, initial, initial, object, attribute, duration, EASE_DONT, delay, depends)
         self.speed = speed
         self.val = initial
 
@@ -80,7 +84,7 @@ class _ConstantTween(_Tween):
 
 class _SleepTween(_Tween):
     def __init__(self, idx: int, duration: float, depends: int = -1) -> None:
-        super().__init__(idx, -1, 0, None, "", duration, _Tween.TWEENER_DONT, 0.0, depends)
+        super().__init__(idx, 0, 0, None, "", duration, EASE_DONT, 0.0, depends)
 
     def update(self, dt: float):
 
@@ -92,7 +96,7 @@ class _SleepTween(_Tween):
 
 class _FunctionCallTween(_Tween):
     def __init__(self, idx: int, function: typing.Callable[[], typing.Any], depends: int = -1) -> None:
-        super().__init__(idx, -1, 0, None, "", 0, _Tween.TWEENER_DONT, 0.0, depends)
+        super().__init__(idx, 0, 0, None, "", 0, EASE_DONT, 0.0, depends)
         self.func = function
 
     def update(self, dt: float):
@@ -106,10 +110,10 @@ def _create_tween(tweenfunc: typing.Callable[[int], _Tween]) -> int:
     _Tween.TWEENS[idx] = tweenfunc(idx)
     return idx
 
-def tween(initial_value: float, object: object, attribute: str, duration: float, target: float, tweener: _Tweener, delay: float = 0.0, depends: int = -1) -> int:
+def tween(initial_value: _Tweenable, object: object, attribute: str, duration: float, target: _Tweenable, tweener: _Easing, delay: float = 0.0, depends: int = -1) -> int:
     return _create_tween(lambda idx: _Tween(idx, initial_value, target, object, attribute, duration, tweener, delay, depends))
 
-def tween_continuous(initial_value: float, object: object, attribute: str, duration: float, speed: float, delay: float = 0.0, depends: int = -1) -> int:
+def tween_continuous(initial_value: _Tweenable, object: object, attribute: str, duration: float, speed: float, delay: float = 0.0, depends: int = -1) -> int:
     return _create_tween(lambda idx: _ConstantTween(idx, initial_value, object, attribute, speed, duration, delay, depends))
 
 def tween_wait(duration: float, depends: int = -1) -> int:
@@ -138,3 +142,13 @@ def cancel_tween(idx: int):
 def update_tweens(dt: float):
     for idx in _Tween.TWEENS.copy():
         _Tween.TWEENS[idx].update(dt)
+
+def _get_interpolator_for_tweenable[T: _Tweenable](tweenable: T) -> typing.Callable[[T, T, float], T]:
+    if isinstance(tweenable, float):
+        return skittle.math.lerpf # type: ignore
+    
+    if isinstance(tweenable, glm.vec2):
+        return skittle.math.lerp_vec # type: ignore
+    
+
+    raise TypeError(f"tried to get tween interpolator for some type without one: {type(tweenable)}")
