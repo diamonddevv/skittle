@@ -1,3 +1,4 @@
+import typing
 import moderngl
 import skittle
 from pyglm import glm
@@ -24,24 +25,33 @@ class PhysicsWorld():
                     continue
 
                 if obj.rect.collides_rect(other.rect):
-                    if obj._static:
-                        continue
 
-                    obj.report_collision(other)
+                    treatment = obj.treatments.get(other.name, "collide")
 
-                    if obj._report_only or other._report_only:
-                        continue
+                    if treatment != "ignore":
 
-                    overlap, polarity = obj.rect.calc_overlap(other.rect)
+                        if obj._static:
+                            continue
 
-                    obj.try_move(obj._pos + polarity * glm.vec2(
-                        overlap.x if overlap.x <= overlap.y else 0,
-                        overlap.y if overlap.y <= overlap.x else 0
-                    ))       
+                        obj.report_collision(other)
+
+                        if treatment == "collide":
+
+                            if obj._report_only or other._report_only:
+                                continue
+
+                            overlap, polarity = obj.rect.calc_overlap(other.rect)
+
+                            obj.try_move(obj._pos + polarity * glm.vec2(
+                                overlap.x if overlap.x <= overlap.y else 0,
+                                overlap.y if overlap.y <= overlap.x else 0
+                            ))       
 
 
 class PhysicsObject():
-    def __init__(self, width: float, height: float, owner: object, x: float = 0, y: float = 0, static: bool = False, report_only: bool = False) -> None:
+    type _CollisionBehaviour = typing.Literal["ignore", "collide", "report"]
+
+    def __init__(self, width: float, height: float, name: str, owner: object, x: float = 0, y: float = 0, static: bool = False, report_only: bool = False) -> None:
 
         self._id: int | None = None
         self.owner = owner
@@ -50,6 +60,9 @@ class PhysicsObject():
         self.rect = skittle.math.Rect(x - width/2, y -height/2, width, height)
         self._static = static
         self._report_only = report_only
+
+        self.name = name
+        self.treatments: dict[str, PhysicsObject._CollisionBehaviour] = {}
 
         self.collision_signal = skittle.observer.Signal()
 
