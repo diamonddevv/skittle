@@ -15,19 +15,28 @@ def image(path: str) -> pygame.Surface:
 def spritesheet(path: str, sprite_w: int = 16, sprite_h: int = 16, sep_x: int = 0, sep_y: int = 0) -> Spritesheet:
     return Spritesheet(image(path), sprite_w, sprite_h, sep_x, sep_y)
 
-def shader(path: str) -> str:
-    f = open(path, "r")
-    s = f.read()
-    f.close()
-    return s
+def tilemap(ctx: moderngl.Context, path: str) -> skittle.resource.Tilemap:
+    return skittle.resource.Tilemap.from_json(ctx, path)
+
+def postprocessor(ctx: moderngl.Context, path: str) -> skittle.render.PostProcessEffect:
+    return skittle.render.PostProcessEffect.from_json(ctx, path)
 
 def program(ctx: moderngl.Context, frag_path: str = "shader/blit.frag", vert_path: str = "shader/blit.vert") -> moderngl.Program:
-    return ctx.program(vertex_shader=shader(vert_path), fragment_shader=shader(frag_path))
+    return ctx.program(vertex_shader=_txtfile(vert_path), fragment_shader=_txtfile(frag_path))
 
 def image_from_url(url: str, user_agent_author_contact_label: str) -> pygame.Surface:
     bytes = requests.get(url, headers={'User-Agent': f'skittle engine-based app ({user_agent_author_contact_label})' }).content
     data = io.BytesIO(bytes)
     return pygame.image.load(data)
+
+
+
+
+def _txtfile(path: str) -> str:
+    f = open(path, "r")
+    s = f.read()
+    f.close()
+    return s
 
 # # # #
 

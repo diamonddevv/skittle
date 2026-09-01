@@ -10,7 +10,7 @@ from skittle.camera import Camera
 
 class Test(skittle.window.Window):
 
-    URL: str = "https://scontent-man2-1.cdninstagram.com/v/t51.82787-15/732663393_18078637844670346_2825249175333996486_n.webp?_nc_cat=111&ig_cache_key=MzkzMTA3OTMyMDE4ODQ1NzY1OQ%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=6ac--z8--C8Q7kNvwHCnNHS&_nc_oc=Adr6nO24lg9jtA1iqy4DofGIc4pEQHlIgINCljpe1pHTJiUw5HSCjYh23Uox_EbfkM_IafcN_NOOLEVEmLG0LuSY&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent-man2-1.cdninstagram.com&_nc_gid=kYchdlGzKUBJLExcIS-ekQ&_nc_ss=7a22e&oh=00_AQH4AblO-CQyfzArx__ZtEAJ30y2hXf7KcxLpP6_rEIftA&oe=6A9217BD"
+    URL: str = "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Cat_demonstrating_static_cling_with_styrofoam_peanuts.jpg/330px-Cat_demonstrating_static_cling_with_styrofoam_peanuts.jpg?utm_source=en.wikipedia.org&utm_campaign=parser&utm_content=thumbnail"
 
     def __init__(self) -> None:
         super().__init__(None, "test", target_fps=60, fps_in_title=True)
@@ -23,6 +23,7 @@ class Test(skittle.window.Window):
         self.heart_mesh = skittle.render.mesh.SpritesheetMesh(self.ctx, self.hearts)
         self.many_hearts = skittle.render.mesh.InstancedSpritesheetMesh(self.ctx, self.hearts)
 
+        self.electrostatics_cat = skittle.render.texture(self.ctx, skittle.resource.image_from_url(Test.URL, "fynndiamond@gmail.com"))
 
         self.panning = False
         self.last_mouse_pos = glm.vec2()
@@ -56,14 +57,14 @@ class Test(skittle.window.Window):
             180, 80
         )
 
-        self.post_processor.add(skittle.render.PostProcessEffect.from_json(self.ctx, "tests/asset/postprocess/crt.json"))
+        self.post_processor.add(skittle.resource.postprocessor(self.ctx, "tests/asset/postprocess/crt.json"))
         self.post_processor.set_active("crt", False)
 
         
         skittle.audio.load_sound("scotland", "tests/asset/sound/SCOTLAND.wav")
         skittle.audio.play_sound("scotland")
 
-        self.tilemap = skittle.resource.Tilemap.from_json(self.ctx, "tests/asset/tilemap/map.json")
+        self.tilemap = skittle.resource.tilemap(self.ctx, "tests/asset/tilemap/map.json")
         self.tilemap.bake()
 
 
@@ -100,6 +101,9 @@ class Test(skittle.window.Window):
         self.physball.draw(ctx, camera)
 
         skittle.draw.circle(ctx, camera, self.tween_pos, 12, skittle.color.BLACK)
+
+
+        self.electrostatics_cat.render(camera, glm.vec2(-800, 500))
     
 
     def update(self, dt: float, camera: Camera):
@@ -117,6 +121,8 @@ class Test(skittle.window.Window):
 
         self.phys_world.update(dt)
         skittle.tween.update_tweens(dt)
+
+        self.electrostatics_cat._color_overlay = skittle.color.Color(255, 255, 255, int((glm.sin(self.age) + 1) / 2 * 255))
 
         
     def handle_zoom(self, event: pygame.Event):

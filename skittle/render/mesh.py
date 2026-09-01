@@ -65,10 +65,11 @@ in vec2 v_uv;
 out vec4 fragColor;
 
 uniform vec4 u_tint;
+uniform vec4 u_color_overlay;
 uniform sampler2D u_texture;
 
 void main() {
-    fragColor = texture(u_texture, v_uv) * u_tint;
+    fragColor = mix(texture(u_texture, v_uv), vec4(u_color_overlay.rgb, 1), u_color_overlay.a) * u_tint;
 }
 """
 
@@ -97,10 +98,12 @@ void main() {
         self._texture = skittle.render.gl.surf_texture(self._ctx, texture) if texture != None else None
         self._size = glm.vec2(texture.width, texture.height) if texture != None else glm.vec2(0, 0)
 
+        self._color_overlay = skittle.color.EMPTY
+
     def _render_now(self, camera: skittle.camera.Camera, 
                     position: glm.vec2, 
                     scale: glm.vec2 = glm.vec2(1.0), 
-                    color: skittle.color.Color = skittle.color.WHITE, 
+                    color: skittle.color.Color = skittle.color.WHITE,
                     rotation: float = 0.0, 
                     overlay: bool = False, 
                     mode: int = moderngl.TRIANGLES):
@@ -115,6 +118,7 @@ void main() {
         self.uniform('u_position', (position.x, -position.y))
         self.uniform('u_scale', (scale.x, scale.y))
         self.uniform('u_tint', color)
+        self.uniform('u_color_overlay', self._color_overlay)
         self.uniform('u_rot_rad', rotation)
         self.uniform('u_texture', 0)
 
