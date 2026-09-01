@@ -87,12 +87,14 @@ class Test(skittle.window.Window):
 
         self.many_hearts.render(camera, position=glm.vec2(0, 100))
 
-        skittle.draw.rect(ctx, camera, self.coltest_rect, skittle.color.GREEN if self.coltest_rect.collides_point(skittle.input.get_world_mouse_pos(camera, overlay=False)) else skittle.color.RED, filled=True, overlay=False)
+        skittle.draw.rect(ctx, camera, self.coltest_rect, 
+                          skittle.color.GREEN if self.coltest_rect.collides_point(skittle.input.get_world_mouse_pos(camera, overlay=False)) else skittle.color.RED, 
+                          overlay=False)
 
         self.tilemap.render(camera, glm.vec2(-1200, 200))
 
-        skittle.draw.circle(ctx, camera, skittle.input.get_world_mouse_pos(camera), 10, skittle.color.YELLOW, True)
-        skittle.draw.circle(ctx, camera, skittle.input.get_world_mouse_pos(camera, True), 6, skittle.color.CYAN, True, layer=2, overlay=True)
+        skittle.draw.circle(ctx, camera, skittle.input.get_world_mouse_pos(camera), 10, skittle.color.YELLOW)
+        skittle.draw.circle(ctx, camera, skittle.input.get_world_mouse_pos(camera, True), 6, skittle.color.CYAN, layer=2, overlay=True)
 
         self.wall_bb._render_bounding_box(ctx, camera)
         self.physball.draw(ctx, camera)
@@ -150,7 +152,7 @@ class Physball():
         self.accel = 10
 
     def draw(self, ctx: moderngl.Context, camera: skittle.camera.Camera):
-        skittle.draw.circle(ctx, camera, self.physobj.get_confirmed_pos(), self.size, skittle.color.GREEN, True)
+        skittle.draw.circle(ctx, camera, self.physobj.get_confirmed_pos(), self.size, skittle.color.GREEN)
         self.physobj._render_bounding_box(ctx, camera)
 
     def update(self, dt: float, camera: skittle.camera.Camera):
