@@ -6,7 +6,7 @@ import time
 import math
 
 type _Easing = typing.Callable[[float], float] # f(t) = x
-type _Tweenable = float | glm.vec2
+type _Tweenable = int | float | glm.vec2
 
 EASE_DONT: _Easing = lambda t: 0
 EASE_LINEAR: _Easing = lambda t: t
@@ -144,6 +144,9 @@ def update_tweens(dt: float):
         _Tween.TWEENS[idx].update(dt)
 
 def _get_interpolator_for_tweenable[T: _Tweenable](tweenable: T) -> typing.Callable[[T, T, float], T]:
+    if isinstance(tweenable, int):
+        return skittle.math.lerpi # type: ignore
+
     if isinstance(tweenable, float):
         return skittle.math.lerpf # type: ignore
     

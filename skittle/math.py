@@ -14,6 +14,9 @@ def clampf(x: float, low: float, high: float) -> float:
         return low
     return x 
 
+def lerpi(a: int, b: int, t: float) -> int:
+    return int(lerpf(a, b, t))
+
 def lerpf(a: float, b: float, t: float) -> float:
     return a + (b - a) * t
 
