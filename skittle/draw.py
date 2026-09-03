@@ -14,25 +14,25 @@ class _Meshes():
         _Meshes._texture = skittle.render.mesh.TextureMesh(ctx, None)
 
 
-def line(ctx: moderngl.Context, camera: skittle.camera.Camera, points: list[glm.vec2], line_color: skittle.color.Color, closed: bool = False, fill: skittle.color.Color | None = None, layer: int = 0, thickness: float = 1.0, overlay: bool = False):
+def line(ctx: moderngl.Context, camera: skittle.camera.Camera, points: list[glm.vec2], line_color: skittle.color.Color, closed: bool = False, fill: skittle.color.Color | None = None, layer: int = 0, thickness: float = 1.0, consistent_thickness: bool = False, overlay: bool = False):
     def _submission():
-        ctx.line_width = thickness
+        ctx.line_width = thickness * (camera.zoom if consistent_thickness else 1)
         _Meshes._line.bake(points, closed)
         _Meshes._line._render_now(camera, line_color, overlay, fill)
 
     camera.submit(_submission, camera.calc_layer(layer, overlay))
 
 
-def circle(ctx: moderngl.Context, camera: skittle.camera.Camera, origin: glm.vec2, radius: float, color: skittle.color.Color, outline_col: skittle.color.Color | None = None, outline_width: float = 1.0, layer: int = 0, overlay: bool = False):
+def circle(ctx: moderngl.Context, camera: skittle.camera.Camera, origin: glm.vec2, radius: float, color: skittle.color.Color, outline_col: skittle.color.Color | None = None, outline_width: float = 1.0, , consistent_outline_width: bool = False, layer: int = 0, overlay: bool = False):
     """actually just a dodecagon but close enough right"""
     line(ctx, camera, skittle.math.n_gon_vertices(origin, 12, radius), 
          color if outline_col == None else outline_col, 
          True, 
          color, 
-         layer, outline_width, overlay
+         layer, outline_width, consistent_outline_width, overlay
          )
 
-def rect(ctx: moderngl.Context, camera: skittle.camera.Camera, rect: skittle.math.Rect, color: skittle.color.Color, outline_col: skittle.color.Color | None = None, outline_width: float = 1.0, layer: int = 0, overlay: bool = False):
+def rect(ctx: moderngl.Context, camera: skittle.camera.Camera, rect: skittle.math.Rect, color: skittle.color.Color, outline_col: skittle.color.Color | None = None, outline_width: float = 1.0, , consistent_outline_width: bool = False, layer: int = 0, overlay: bool = False):
     points = [
         glm.vec2(rect.x, rect.y),
         glm.vec2(rect.x + rect.w, rect.y),
@@ -44,5 +44,5 @@ def rect(ctx: moderngl.Context, camera: skittle.camera.Camera, rect: skittle.mat
          color if outline_col == None else outline_col, 
          True, 
          color, 
-         layer, outline_width, overlay
+         layer, outline_width, consistent_outline_width, overlay
          )
