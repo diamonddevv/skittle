@@ -24,6 +24,7 @@ class Test(skittle.window.Window):
         self.many_hearts = skittle.render.mesh.InstancedSpritesheetMesh(self.ctx, self.hearts)
 
         self.electrostatics_cat = skittle.render.texture(self.ctx, skittle.resource.image_from_url(Test.URL, "fynndiamond@gmail.com"))
+        self.scotland = skittle.render.texture(self.ctx, skittle.resource.image("tests/asset/scotland.png"))
 
         self.panning = False
         self.last_mouse_pos = glm.vec2()
@@ -104,6 +105,7 @@ class Test(skittle.window.Window):
 
 
         self.electrostatics_cat.render(camera, glm.vec2(-800, 500))
+        self.scotland.render(camera, glm.vec2(-800, 300), glm.vec2(4))
     
 
     def update(self, dt: float, camera: Camera):
@@ -123,6 +125,7 @@ class Test(skittle.window.Window):
         skittle.tween.update_tweens(dt)
 
         self.electrostatics_cat._color_overlay = skittle.color.Color(255, 255, 255, int((glm.sin(self.age) + 1) / 2 * 255))
+        self.scotland._color_overlay = skittle.color.Color(255, 255, 255, int((glm.sin(self.age) + 1) / 2 * 255))
 
         
     def handle_zoom(self, event: pygame.Event):

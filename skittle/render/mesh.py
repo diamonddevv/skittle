@@ -69,7 +69,8 @@ uniform vec4 u_color_overlay;
 uniform sampler2D u_texture;
 
 void main() {
-    fragColor = mix(texture(u_texture, v_uv), vec4(u_color_overlay.rgb, 1), u_color_overlay.a) * u_tint;
+    vec4 texel = texture(u_texture, v_uv);
+    fragColor = vec4(mix(texel, vec4(u_color_overlay.rgb, 1), u_color_overlay.a).rgb, texel.a) * u_tint;
 }
 """
 
