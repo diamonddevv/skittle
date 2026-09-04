@@ -22,6 +22,10 @@ class Color():
         return Color.from_pygame(pygame.Color.from_hex(hex))
 
     @staticmethod
+    def from_int(hex: int) -> Color:
+        return Color.from_pygame(pygame.color.Color(hex))
+
+    @staticmethod
     def from_normalised(normalised: tuple[float, float, float, float]) -> Color:
         return Color.from_pygame(pygame.Color.from_normalized(normalised))
 
