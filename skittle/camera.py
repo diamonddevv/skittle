@@ -53,7 +53,7 @@ class Camera():
         return self.projection(overlay) * self.view_matrix(overlay)
     
     def calc_layer(self, layer: int = 0, overlay: bool = False) -> int:
-        if (overlay):
+        if (overlay or self._override_always_overlay):
             layer += self._overlay_layer_reserve
         else:
             if layer > self._overlay_layer_reserve:
