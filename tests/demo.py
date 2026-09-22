@@ -24,9 +24,12 @@ class Test(skittle.window.Window):
         self.many_hearts = skittle.render.mesh.InstancedSpritesheetMesh(self.ctx, self.hearts)
 
         #self.electrostatics_cat = skittle.render.texture(self.ctx, skittle.resource.image_from_url(Test.URL, "fynndiamond@gmail.com"))
-        self.scotland = skittle.render.texture(self.ctx, skittle.resource.image("tests/asset/scotland.png"))
+        self.pg_evil_scotland = pygame.transform.invert(skittle.resource.image("tests/asset/scotland.png"))
 
-        #self.pg_evil_scotland = pygame.transform.invert(skittle.resource.image("tests/asset/scotland.png"))
+        self.scotland = skittle.render.texture(self.ctx, skittle.resource.image("tests/asset/scotland.png"))
+        self.evil_scotland = skittle.render.texture(self.ctx, self.pg_evil_scotland)
+        self.evil_scotland.use_top_left_corner = True
+
         #self.scotland.replace_texture_data(pygame.image.tobytes(self.pg_evil_scotland, "RGBA"))
 
         self.panning = False
@@ -109,6 +112,7 @@ class Test(skittle.window.Window):
 
         #self.electrostatics_cat.render(camera, glm.vec2(-800, 500))
         self.scotland.render(camera, glm.vec2(-800, 300), glm.vec2(4))
+        self.evil_scotland.render(camera, glm.vec2())
 
         self.glyphxel.render(camera, "bottom to top text\nthis is a 2nd line", glm.vec2(-1000, 1000), 1, orientation='bottom_to_top')
     

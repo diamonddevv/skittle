@@ -101,6 +101,8 @@ void main() {
 
         self._color_overlay = skittle.color.EMPTY
 
+        self.use_top_left_corner = False
+
     def _render_now(self, camera: skittle.camera.Camera, 
                     position: glm.vec2, 
                     scale: glm.vec2 = glm.vec2(1.0), 
@@ -114,6 +116,9 @@ void main() {
             return
 
         self._texture.use(0)
+
+        if self.use_top_left_corner:
+            position = position + (self._size * scale / 2)
 
         self.uniform('u_proj_view', camera.proj_view_mat(overlay).to_bytes())
         self.uniform('u_position', (position.x, -position.y))
