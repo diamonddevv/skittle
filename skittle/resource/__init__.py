@@ -60,7 +60,7 @@ class _ResourceData():
     _PROGRAM_DEV_DIRECTORY: str = ""
     _PROGRAM_APP_DIRECTORY: str = ""
 
-    _PIXELFONT_CACHE: dict[str, skittle.render.TextRenderer]
+    _PIXELFONT_CACHE: dict[str, skittle.render.TextRenderer] = {}
 
 def set_program_directories(dev: str, app: str):
     skittle.resource._ResourceData._PROGRAM_DEV_DIRECTORY = dev
