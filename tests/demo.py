@@ -26,6 +26,9 @@ class Test(skittle.window.Window):
         #self.electrostatics_cat = skittle.render.texture(self.ctx, skittle.resource.image_from_url(Test.URL, "fynndiamond@gmail.com"))
         self.scotland = skittle.render.texture(self.ctx, skittle.resource.image("tests/asset/scotland.png"))
 
+        #self.pg_evil_scotland = pygame.transform.invert(skittle.resource.image("tests/asset/scotland.png"))
+        #self.scotland.replace_texture_data(pygame.image.tobytes(self.pg_evil_scotland, "RGBA"))
+
         self.panning = False
         self.last_mouse_pos = glm.vec2()
 

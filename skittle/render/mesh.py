@@ -136,6 +136,13 @@ void main() {
         self._texture = skittle.render.gl.surf_texture(self._ctx, texture)
         self._size = glm.vec2(texture.width, texture.height)
 
+    def replace_texture_data(self, bytes: bytes):
+        """replace texture data with raw bytes. they must match size."""
+        if self._texture == None:
+            skittle.err("tried to replace texture data on texture mesh, but no texture existed")
+            return
+        self._texture.write(bytes)
+
     def render(self, camera: skittle.camera.Camera, 
                     position: glm.vec2, 
                     scale: glm.vec2 = glm.vec2(1.0), 

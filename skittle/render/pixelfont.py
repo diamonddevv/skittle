@@ -4,7 +4,7 @@ import typing
 import skittle
 import json
 
-type _Orientation = typing.Literal['left_to_right', 'right_to_left', 'top_to_bottom', 'bottom_to_top']
+type TextRenderOrientation = typing.Literal['left_to_right', 'right_to_left', 'top_to_bottom', 'bottom_to_top']
 
 
 class TextRenderer():
@@ -85,12 +85,12 @@ class TextRenderer():
 
         return (longest_line_width, line)
 
-    def render(self, camera: skittle.camera.Camera, text: str, pos: glm.vec2, scale: float = 1, color: skittle.color.Color = skittle.color.WHITE, orientation: _Orientation = 'left_to_right', overlay: bool = False):
+    def render(self, camera: skittle.camera.Camera, text: str, pos: glm.vec2, scale: float = 1, color: skittle.color.Color = skittle.color.WHITE, orientation: TextRenderOrientation = 'left_to_right', overlay: bool = False):
         camera.submit(lambda: self._render_now(
             camera, text, pos, scale, color, orientation, overlay
             ), layer=camera.calc_layer(0, overlay))
 
-    def _render_now(self, camera: skittle.camera.Camera, text: str, pos: glm.vec2, scale: float = 1, color: skittle.color.Color = skittle.color.WHITE, orientation: _Orientation = 'left_to_right', overlay: bool = False):
+    def _render_now(self, camera: skittle.camera.Camera, text: str, pos: glm.vec2, scale: float = 1, color: skittle.color.Color = skittle.color.WHITE, orientation: TextRenderOrientation = 'left_to_right', overlay: bool = False):
         """
         call `render` instead. this function exists to hack around the fact a single mesh could only draw one piece of text per frame, so instead they're indiviudally batched on a layer of abstraction higher than the mesh itself
         """

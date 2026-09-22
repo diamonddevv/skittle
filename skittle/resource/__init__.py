@@ -29,6 +29,22 @@ def image_from_url(url: str, user_agent_author_contact_label: str) -> pygame.Sur
     data = io.BytesIO(bytes)
     return pygame.image.load(data)
 
+def pixelfont(ctx: moderngl.Context, path: str, id: str | None = None) -> skittle.render.TextRenderer:
+    """
+    create and return a pixelfont textrenderer object. if an id is passed, it will be added to a cache. this cache can be accessed by id using `skittle.resource.cached_pixelfont`. if this id already exists, overwrites the cache.
+    """
+    font = skittle.render.TextRenderer.from_json(ctx, path)
+    if id != None:
+        _ResourceData._PIXELFONT_CACHE[id] = font
+    return font
+
+def cached_pixelfont(id: str) -> skittle.render.TextRenderer:
+    """
+    return a pixelfont from the cache. raises `ValueError` if no font exists under `id`.
+    """
+    if not id in _ResourceData._PIXELFONT_CACHE:
+        raise ValueError(f"no id {id} in pixelfont cache")
+    return _ResourceData._PIXELFONT_CACHE[id]
 
 
 
@@ -43,6 +59,8 @@ def _txtfile(path: str) -> str:
 class _ResourceData():
     _PROGRAM_DEV_DIRECTORY: str = ""
     _PROGRAM_APP_DIRECTORY: str = ""
+
+    _PIXELFONT_CACHE: dict[str, skittle.render.TextRenderer]
 
 def set_program_directories(dev: str, app: str):
     skittle.resource._ResourceData._PROGRAM_DEV_DIRECTORY = dev
