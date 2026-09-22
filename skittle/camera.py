@@ -18,6 +18,8 @@ class Camera():
         self.zoom = zoom
         self.rotation = 0.0
 
+        self._override_always_overlay = False
+
         self.position = glm.vec2(0)
 
         self._overlay_layer_reserve = 500
@@ -25,8 +27,8 @@ class Camera():
         self._submissions: dict[int, list[Camera._Submission]] = {}
 
     def projection(self, overlay: bool):
-        half_w = self.frame_width / 2 / (self.zoom if not overlay else 1)
-        half_h = self.frame_height / 2 / (self.zoom if not overlay else 1)
+        half_w = self.frame_width / 2 / (self.zoom if not (overlay or self._override_always_overlay) else 1)
+        half_h = self.frame_height / 2 / (self.zoom if not (overlay or self._override_always_overlay) else 1)
 
         return glm.ortho(
             -half_w, half_w,
@@ -36,7 +38,7 @@ class Camera():
     
     def view_matrix(self, overlay: bool):
         view = glm.mat4(1.0)
-        if not overlay:
+        if not (overlay or self._override_always_overlay):
             if self.rotation != 0.0:
                 view = glm.rotate(view, -glm.radians(self.rotation), glm.vec3(0,0,1))
             view = glm.translate(view, glm.vec3(-self.position.x, -self.position.y, 0.0))
@@ -51,7 +53,7 @@ class Camera():
         return self.projection(overlay) * self.view_matrix(overlay)
     
     def calc_layer(self, layer: int = 0, overlay: bool = False) -> int:
-        if overlay:
+        if (overlay):
             layer += self._overlay_layer_reserve
         else:
             if layer > self._overlay_layer_reserve:
@@ -97,3 +99,6 @@ class Camera():
 
     def frame_center(self) -> glm.vec2:
         return glm.vec2(self.frame_width / 2, self.frame_height / 2)
+
+    def enable_always_overlay_override(self):
+        self._override_always_overlay = True
