@@ -18,16 +18,16 @@ class Test(skittle.window.Window):
 
         self.hearts = skittle.resource.spritesheet("tests/asset/spritesheet.png")
 
-        self.glyphxel = skittle.render.TextRenderer.from_json(self.ctx, "tests/asset/glyphxel_definition.json")
+        self.glyphxel = skittle.render.TextRenderer.from_json(self.mgl_ctx, "tests/asset/glyphxel_definition.json")
 
-        self.heart_mesh = skittle.render.mesh.SpritesheetMesh(self.ctx, self.hearts)
-        self.many_hearts = skittle.render.mesh.InstancedSpritesheetMesh(self.ctx, self.hearts)
+        self.heart_mesh = skittle.render.mesh.SpritesheetMesh(self.mgl_ctx, self.hearts)
+        self.many_hearts = skittle.render.mesh.InstancedSpritesheetMesh(self.mgl_ctx, self.hearts)
 
         #self.electrostatics_cat = skittle.render.texture(self.ctx, skittle.resource.image_from_url(Test.URL, "fynndiamond@gmail.com"))
         self.pg_evil_scotland = pygame.transform.invert(skittle.resource.image("tests/asset/scotland.png"))
 
-        self.scotland = skittle.render.texture(self.ctx, skittle.resource.image("tests/asset/scotland.png"))
-        self.evil_scotland = skittle.render.texture(self.ctx, self.pg_evil_scotland)
+        self.scotland = skittle.render.texture(self.mgl_ctx, skittle.resource.image("tests/asset/scotland.png"))
+        self.evil_scotland = skittle.render.texture(self.mgl_ctx, self.pg_evil_scotland)
         self.evil_scotland.use_top_left_corner = True
 
         #self.scotland.replace_texture_data(pygame.image.tobytes(self.pg_evil_scotland, "RGBA"))
@@ -64,14 +64,14 @@ class Test(skittle.window.Window):
             180, 80
         )
 
-        self.post_processor.add(skittle.resource.postprocessor(self.ctx, "tests/asset/postprocess/crt.json"))
+        self.post_processor.add(skittle.resource.postprocessor(self.mgl_ctx, "tests/asset/postprocess/crt.json"))
         self.post_processor.set_active("crt", False)
 
         
         skittle.audio.load_sound("scotland", "tests/asset/sound/SCOTLAND.wav")
         skittle.audio.play_sound("scotland")
 
-        self.tilemap = skittle.resource.tilemap(self.ctx, "tests/asset/tilemap/map.json")
+        self.tilemap = skittle.resource.tilemap(self.mgl_ctx, "tests/asset/tilemap/map.json")
         self.tilemap.bake()
 
 
@@ -89,7 +89,7 @@ class Test(skittle.window.Window):
 
 
     def draw(self, ctx: moderngl.Context, camera: skittle.camera.Camera):
-        self.ctx.clear(1, 0.6, 0.2, 1)
+        self.mgl_ctx.clear(1, 0.6, 0.2, 1)
 
         self.glyphxel.render(camera, f"instances: {self.many_hearts._render_instances}\nframerate: {self._clock.get_fps():.0f} fps", glm.vec2(0, -100), scale=5)
 
@@ -114,8 +114,10 @@ class Test(skittle.window.Window):
         self.scotland.render(camera, glm.vec2(-800, 300), glm.vec2(4))
         self.evil_scotland.render(camera, glm.vec2())
 
+        skittle.draw.circle(ctx, camera, glm.vec2(-1200, 80), 2, skittle.color.RED)
+        self.glyphxel.render(camera, "du bist gut genug\nis german for\nyou are good enough", glm.vec2(-1200, 80), center=True)
+
         self.glyphxel.render(camera, "bottom to top text\nthis is a 2nd line", glm.vec2(-1000, 1000), 1, orientation='bottom_to_top')
-    
 
     def update(self, dt: float, camera: Camera):
         self.age += dt

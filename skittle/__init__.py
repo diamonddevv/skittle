@@ -24,6 +24,7 @@ from skittle import render
 from skittle import resource
 from skittle import camera
 from skittle import window
+from skittle import context
 
 __VERSION__: str = "0.0.0"
 

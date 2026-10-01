@@ -24,15 +24,20 @@ class Window():
         self._window_surface = pygame.display.set_mode((window_width, window_height), pygame.RESIZABLE | pygame.OPENGL | pygame.DOUBLEBUF)
         self._clock = pygame.Clock()
 
-        self.ctx = moderngl.create_context()
-        self.ctx.enable(moderngl.BLEND)
+        self.mgl_ctx = moderngl.create_context()
+        self.mgl_ctx.enable(moderngl.BLEND)
         pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MAJOR_VERSION, skittle.__GLSL_MAJOR__)
         pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MINOR_VERSION, skittle.__GLSL_MINOR__)
-        skittle.draw._Meshes._init(self.ctx)
+        skittle.draw._Meshes._init(self.mgl_ctx)
 
-        self.post_processor = skittle.render.PostProcessor(self.ctx, width, height, window_width, window_height)
+        self.post_processor = skittle.render.PostProcessor(self.mgl_ctx, width, height, window_width, window_height)
         self.camera = skittle.camera.Camera(width, height, self.post_processor.viewport)
-        self.scene_manager = skittle.scene.SceneManager(self.ctx, self.camera, initial_scene, self)
+
+        self.ctx = skittle.context.Context(self.mgl_ctx, self.camera)
+
+
+        self.scene_manager = skittle.scene.SceneManager(self.ctx, initial_scene, self)
+
 
         if icon_path != "":
             image = pygame.image.load(icon_path).convert_alpha()
@@ -46,15 +51,15 @@ class Window():
 
         while self._running:
             self.event_handle()
-            self.update(dt, self.camera)
+            self.update(dt, self.ctx)
             skittle.audio.AudioManager.INSTANCE.update(dt)
             if not self._running:
                 continue
 
-            self.ctx.clear()
+            self.mgl_ctx.clear()
             self.post_processor.begin_frame()
             self.camera.begin_frame()
-            self.draw(self.ctx, self.camera)
+            self.draw(self.ctx)
             self.camera.flush()
             self.post_processor.flush()
             pygame.display.flip()
@@ -65,19 +70,19 @@ class Window():
                 pygame.display.set_caption(self.title)
             dt = self._clock.tick(self.target_fps) / 1000
 
-    def update(self, dt: float, camera: skittle.camera.Camera):
-        self.scene_manager.update(dt, camera)
+    def update(self, dt: float, ctx: skittle.context.Context):
+        self.scene_manager.update(dt, ctx)
         skittle.tween.update_tweens(dt) # need to change so that physics gets evaluated before this?
 
-    def draw(self, ctx: moderngl.Context, camera: skittle.camera.Camera):
-        self.scene_manager.draw(ctx, camera)
+    def draw(self, ctx: skittle.context.Context):
+        self.scene_manager.draw(ctx)
 
     def event_handle(self):
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 self.close()
             if e.type == pygame.VIDEORESIZE:
-                self.ctx.viewport = (0, 0, e.w, e.h)
+                self.mgl_ctx.viewport = (0, 0, e.w, e.h)
                 self._window_size = (e.w, e.h)
                 self.post_processor.resize_viewport(e.w, e.h)
                 print(*self._window_size)
@@ -94,7 +99,7 @@ class Window():
         self._running = False
         self.post_processor.release(all=True)
         skittle.audio.AudioManager.INSTANCE.release()
-        self.ctx.release()
+        self.mgl_ctx.release()
 
     def switch_scene(self, scene: skittle.scene.SceneSwitch):
         self.scene_manager.switch(scene)

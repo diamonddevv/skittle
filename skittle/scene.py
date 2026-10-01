@@ -3,42 +3,41 @@ import moderngl
 import skittle
 
 
-type SceneSwitch = typing.Callable[[SceneManager, moderngl.Context, skittle.camera.Camera], Scene]
+type SceneSwitch = typing.Callable[[SceneManager, skittle.context.Context], Scene]
 
 class SceneManager():
-    def __init__(self, ctx: moderngl.Context, camera: skittle.camera.Camera, initial_scene: SceneSwitch | None, window: skittle.render.Window) -> None:
+    def __init__(self, ctx: skittle.context.Context, initial_scene: SceneSwitch | None, window: skittle.window.Window) -> None:
         self.ctx = ctx
-        self.camera = camera
         self.window = window
         self.active = None
 
         self._initial_scene = initial_scene
 
     def start(self):
-        self.active = None if self._initial_scene == None else self._initial_scene(self, self.ctx, self.camera)
+        self.active = None if self._initial_scene == None else self._initial_scene(self, self.ctx)
 
-    def draw(self, ctx: moderngl.Context, camera: skittle.camera.Camera):
+    def draw(self, ctx: skittle.context.Context):
         if self.active != None:
-            self.active.draw(ctx, camera)
+            self.active.draw(ctx)
 
-    def update(self, dt: float, camera: skittle.camera.Camera):
+    def update(self, dt: float, ctx: skittle.context.Context):
         if self.active != None:
-            self.active.update(dt, camera)
+            self.active.update(dt, ctx)
 
     def switch(self, scene: SceneSwitch):
         if self.active != None:
             self.active.close()
-        self.active = scene(self, self.ctx, self.camera)
+        self.active = scene(self, self.ctx)
 
 
 class Scene():
-    def __init__(self, scene_manager: SceneManager, ctx: moderngl.Context, camera: skittle.camera.Camera) -> None:
+    def __init__(self, scene_manager: SceneManager, ctx: skittle.context.Context) -> None:
         self.scene_manager = scene_manager
     
-    def draw(self, ctx: moderngl.Context, camera: skittle.camera.Camera):
+    def draw(self, ctx: skittle.context.Context):
         pass
 
-    def update(self, dt: float, camera: skittle.camera.Camera):
+    def update(self, dt: float, ctx: skittle.context.Context):
         pass
 
     def close(self):

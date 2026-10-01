@@ -85,12 +85,12 @@ class TextRenderer():
 
         return (longest_line_width, line)
 
-    def render(self, camera: skittle.camera.Camera, text: str, pos: glm.vec2, scale: float = 1, color: skittle.color.Color = skittle.color.WHITE, orientation: TextRenderOrientation = 'left_to_right', overlay: bool = False):
+    def render(self, camera: skittle.camera.Camera, text: str, pos: glm.vec2, scale: float = 1, color: skittle.color.Color = skittle.color.WHITE, orientation: TextRenderOrientation = 'left_to_right', layer: int = 0, overlay: bool = False, center: bool = False):
         camera.submit(lambda: self._render_now(
-            camera, text, pos, scale, color, orientation, overlay
-            ), layer=camera.calc_layer(0, overlay))
+            camera, text, pos, scale, color, orientation, overlay, center
+            ), layer=camera.calc_layer(layer, overlay))
 
-    def _render_now(self, camera: skittle.camera.Camera, text: str, pos: glm.vec2, scale: float = 1, color: skittle.color.Color = skittle.color.WHITE, orientation: TextRenderOrientation = 'left_to_right', overlay: bool = False):
+    def _render_now(self, camera: skittle.camera.Camera, text: str, pos: glm.vec2, scale: float = 1, color: skittle.color.Color = skittle.color.WHITE, orientation: TextRenderOrientation = 'left_to_right', overlay: bool = False, center: bool = False):
         """
         call `render` instead. this function exists to hack around the fact a single mesh could only draw one piece of text per frame, so instead they're indiviudally batched on a layer of abstraction higher than the mesh itself
         """
@@ -111,10 +111,13 @@ class TextRenderer():
 
         width_pos = 0
         line = 0
+        block_width = 0
         for char in text:
 
             if char == '\n':
                 line += scale
+                if width_pos > block_width:
+                    block_width = width_pos
                 width_pos = 0
             else:
                 if self.skip_invalid_chars and char not in self.codepoints:
@@ -144,9 +147,16 @@ class TextRenderer():
                 ))
                 width_pos += width
 
+        if width_pos > block_width:
+            block_width = width_pos
+
         self.mesh.bake_instances(inst_data)
 
-        self.mesh._render_now(camera, pos, overlay=overlay)
+        self.mesh._render_now(
+            camera, 
+            pos if not center else (pos - glm.vec2(block_width, (line + 1) * self.spritesheet.sprite_h) / 2),
+            overlay=overlay
+            )
 
     def release(self):
         self.mesh.release()
