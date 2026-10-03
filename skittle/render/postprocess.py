@@ -9,8 +9,8 @@ from pyglm import glm
 
 
 class PostProcessor():
-    def __init__(self, ctx: moderngl.Context, width: int, height: int, window_width: int, window_height: int) -> None:
-        self.ctx = ctx
+    def __init__(self, mgl_ctx: moderngl.Context, width: int, height: int, window_width: int, window_height: int) -> None:
+        self._mgl_ctx = mgl_ctx
         self.width = width
         self.height = height
         self.aspect = width / height
@@ -55,7 +55,7 @@ class PostProcessor():
              -1,  1, 0, 1,
               1,  1, 1, 1], dtype='f4'
         )
-        self._presentation_prog = self.ctx.program(
+        self._presentation_prog = self._mgl_ctx.program(
             vertex_shader="""
                 #version 330
                 in vec2 in_pos;
@@ -74,16 +74,16 @@ class PostProcessor():
                 void main() { f_color = texture(tex, uv); }
             """,
         )
-        vbo = self.ctx.buffer(vertices.tobytes())
-        self._presentation_vao = self.ctx.vertex_array(
+        vbo = self._mgl_ctx.buffer(vertices.tobytes())
+        self._presentation_vao = self._mgl_ctx.vertex_array(
             self._presentation_prog, [(vbo, '2f 2f', 'in_pos', 'in_uv')]
         )
 
     def _present(self, texture: moderngl.Texture):
-        self.ctx.screen.use()
-        self.ctx.viewport = (0, 0, *self.window_size)
+        self._mgl_ctx.screen.use()
+        self._mgl_ctx.viewport = (0, 0, *self.window_size)
 
-        self.ctx.viewport = self.viewport
+        self._mgl_ctx.viewport = self.viewport
         texture.use(location=0)
         self._presentation_prog['tex'] = 0
         self._presentation_vao.render(moderngl.TRIANGLE_STRIP)
@@ -99,10 +99,10 @@ class PostProcessor():
         self._make_buffers()
 
     def _make_fbo(self) -> tuple[moderngl.Framebuffer, moderngl.Texture]:
-        tex = self.ctx.texture((self.width, self.height), 4)
+        tex = self._mgl_ctx.texture((self.width, self.height), 4)
         tex.filter = (moderngl.LINEAR, moderngl.LINEAR)
-        depth = self.ctx.depth_renderbuffer((self.width, self.height))
-        fbo = self.ctx.framebuffer(color_attachments=[tex], depth_attachment=depth)
+        depth = self._mgl_ctx.depth_renderbuffer((self.width, self.height))
+        fbo = self._mgl_ctx.framebuffer(color_attachments=[tex], depth_attachment=depth)
         return fbo, tex
 
     def _make_buffers(self):
@@ -188,10 +188,10 @@ void main() {
 }
 """
 
-    def __init__(self, ctx: moderngl.Context, uid: str, fragment_shader: str, vertex_shader: str = VERTEX, params: dict[str, typing.Any] = {}, sampler_paths: list[str] = []):
-        self.ctx = ctx
+    def __init__(self, ctx: skittle.Context, uid: str, fragment_shader: str, vertex_shader: str = VERTEX, params: dict[str, typing.Any] = {}, sampler_paths: list[str] = []):
+        self._mgl_ctx = ctx.mgl_ctx
         self.uid = uid
-        self._program = ctx.program(vertex_shader=vertex_shader, fragment_shader=fragment_shader)
+        self._program = self._mgl_ctx.program(vertex_shader=vertex_shader, fragment_shader=fragment_shader)
 
         self._params = params
 
@@ -201,14 +201,14 @@ void main() {
         self._build_use_sampler_textures(sampler_paths)
 
         vertices, indices = skittle.render.gl.uv_quad(2, 2, no_uv=True)
-        self._vbo = ctx.buffer(vertices)
-        self._ibo = ctx.buffer(indices)
-        self._vao = ctx.vertex_array(self._program, [(self._vbo, '2f', 'in_pos')], index_buffer=self._ibo)
+        self._vbo = self._mgl_ctx.buffer(vertices)
+        self._ibo = self._mgl_ctx.buffer(indices)
+        self._vao = self._mgl_ctx.vertex_array(self._program, [(self._vbo, '2f', 'in_pos')], index_buffer=self._ibo)
 
     def _build_use_sampler_textures(self, sampler_paths: list[str]):
         for i, path in enumerate(sampler_paths):
             img = skittle.resource.image(path)
-            texture = self.ctx.texture(img.size, 4, pygame.image.tobytes(img, "RGBA"))
+            texture = self._mgl_ctx.texture(img.size, 4, pygame.image.tobytes(img, "RGBA"))
             texture.use(i + 1) # 0 is reserved for the screen texture
 
     def uniform(self, key: str, value):
@@ -238,7 +238,7 @@ void main() {
         self._vao.release()
 
     @staticmethod
-    def from_json(ctx: moderngl.Context, filepath: str) -> PostProcessEffect:
+    def from_json(ctx: skittle.Context, filepath: str) -> PostProcessEffect:
         with open(filepath, 'rb') as f:
             data = json.load(f)
 

@@ -26,6 +26,8 @@ from skittle import camera
 from skittle import window
 from skittle import context
 
+from skittle.context import Context
+
 __VERSION__: str = "0.0.0"
 
 __GLSL_MAJOR__: int = 3

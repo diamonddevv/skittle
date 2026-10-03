@@ -6,8 +6,6 @@ import pygame
 import skittle
 import random
 
-from skittle.camera import Camera
-
 class Test(skittle.window.Window):
 
     URL: str = "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Cat_demonstrating_static_cling_with_styrofoam_peanuts.jpg/330px-Cat_demonstrating_static_cling_with_styrofoam_peanuts.jpg?utm_source=en.wikipedia.org&utm_campaign=parser&utm_content=thumbnail"
@@ -18,16 +16,16 @@ class Test(skittle.window.Window):
 
         self.hearts = skittle.resource.spritesheet("tests/asset/spritesheet.png")
 
-        self.glyphxel = skittle.render.TextRenderer.from_json(self.mgl_ctx, "tests/asset/glyphxel_definition.json")
+        self.glyphxel = skittle.render.TextRenderer.from_json(self.ctx, "tests/asset/glyphxel_definition.json")
 
-        self.heart_mesh = skittle.render.mesh.SpritesheetMesh(self.mgl_ctx, self.hearts)
-        self.many_hearts = skittle.render.mesh.InstancedSpritesheetMesh(self.mgl_ctx, self.hearts)
+        self.heart_mesh = skittle.render.mesh.SpritesheetMesh(self.ctx.mgl_ctx, self.hearts)
+        self.many_hearts = skittle.render.mesh.InstancedSpritesheetMesh(self.ctx.mgl_ctx, self.hearts)
 
         #self.electrostatics_cat = skittle.render.texture(self.ctx, skittle.resource.image_from_url(Test.URL, "fynndiamond@gmail.com"))
         self.pg_evil_scotland = pygame.transform.invert(skittle.resource.image("tests/asset/scotland.png"))
 
-        self.scotland = skittle.render.texture(self.mgl_ctx, skittle.resource.image("tests/asset/scotland.png"))
-        self.evil_scotland = skittle.render.texture(self.mgl_ctx, self.pg_evil_scotland)
+        self.scotland = skittle.render.texture(self.ctx, skittle.resource.image("tests/asset/scotland.png"))
+        self.evil_scotland = skittle.render.texture(self.ctx, self.pg_evil_scotland)
         self.evil_scotland.use_top_left_corner = True
 
         #self.scotland.replace_texture_data(pygame.image.tobytes(self.pg_evil_scotland, "RGBA"))
@@ -64,14 +62,14 @@ class Test(skittle.window.Window):
             180, 80
         )
 
-        self.post_processor.add(skittle.resource.postprocessor(self.mgl_ctx, "tests/asset/postprocess/crt.json"))
+        self.post_processor.add(skittle.resource.postprocessor(self.ctx, "tests/asset/postprocess/crt.json"))
         self.post_processor.set_active("crt", False)
 
         
         skittle.audio.load_sound("scotland", "tests/asset/sound/SCOTLAND.wav")
         skittle.audio.play_sound("scotland")
 
-        self.tilemap = skittle.resource.tilemap(self.mgl_ctx, "tests/asset/tilemap/map.json")
+        self.tilemap = skittle.resource.tilemap(self.ctx, "tests/asset/tilemap/map.json")
         self.tilemap.bake()
 
 
@@ -88,41 +86,41 @@ class Test(skittle.window.Window):
         self.tween_pos = glm.vec2(500, -1000)
 
 
-    def draw(self, ctx: moderngl.Context, camera: skittle.camera.Camera):
-        self.mgl_ctx.clear(1, 0.6, 0.2, 1)
+    def draw(self, ctx: skittle.Context):
+        self.ctx.clear(1, 0.6, 0.2, 1)
 
-        self.glyphxel.render(camera, f"instances: {self.many_hearts._render_instances}\nframerate: {self._clock.get_fps():.0f} fps", glm.vec2(0, -100), scale=5)
+        self.glyphxel.render(ctx, f"instances: {self.many_hearts._render_instances}\nframerate: {self._clock.get_fps():.0f} fps", glm.vec2(0, -100), scale=5)
 
-        self.many_hearts.render(camera, position=glm.vec2(0, 100))
+        self.many_hearts.render(ctx, position=glm.vec2(0, 100))
 
-        skittle.draw.rect(ctx, camera, self.coltest_rect, 
-                          skittle.color.GREEN if self.coltest_rect.collides_point(skittle.input.get_world_mouse_pos(camera, overlay=False)) else skittle.color.RED, 
+        skittle.draw.rect(ctx, self.coltest_rect, 
+                          skittle.color.GREEN if self.coltest_rect.collides_point(skittle.input.get_world_mouse_pos(ctx, overlay=False)) else skittle.color.RED, 
                           overlay=False)
 
-        self.tilemap.render(camera, glm.vec2(-1200, 200))
+        self.tilemap.render(ctx, glm.vec2(-1200, 200))
 
-        skittle.draw.circle(ctx, camera, skittle.input.get_world_mouse_pos(camera), 10, skittle.color.YELLOW)
-        skittle.draw.circle(ctx, camera, skittle.input.get_world_mouse_pos(camera, True), 6, skittle.color.CYAN, layer=2, overlay=True)
+        skittle.draw.circle(ctx, skittle.input.get_world_mouse_pos(ctx), 10, skittle.color.YELLOW)
+        skittle.draw.circle(ctx, skittle.input.get_world_mouse_pos(ctx, True), 6, skittle.color.CYAN, layer=2, overlay=True)
 
-        self.wall_bb._render_bounding_box(ctx, camera)
-        self.physball.draw(ctx, camera)
+        self.wall_bb._render_bounding_box(ctx)
+        self.physball.draw(ctx)
 
-        skittle.draw.circle(ctx, camera, self.tween_pos, 12, skittle.color.BLACK)
+        skittle.draw.circle(ctx, self.tween_pos, 12, skittle.color.BLACK)
 
 
         #self.electrostatics_cat.render(camera, glm.vec2(-800, 500))
-        self.scotland.render(camera, glm.vec2(-800, 300), glm.vec2(4))
-        self.evil_scotland.render(camera, glm.vec2())
+        self.scotland.render(ctx, glm.vec2(-800, 300), glm.vec2(4))
+        self.evil_scotland.render(ctx, glm.vec2())
 
-        skittle.draw.circle(ctx, camera, glm.vec2(-1200, 80), 2, skittle.color.RED)
-        self.glyphxel.render(camera, "du bist gut genug\nis german for\nyou are good enough", glm.vec2(-1200, 80), center=True)
+        skittle.draw.circle(ctx, glm.vec2(-1200, 80), 2, skittle.color.RED)
+        self.glyphxel.render(ctx, "du bist gut genug\nis german for\nyou are good enough", glm.vec2(-1200, 80), center=True)
 
-        self.glyphxel.render(camera, "bottom to top text\nthis is a 2nd line", glm.vec2(-1000, 1000), 1, orientation='bottom_to_top')
+        self.glyphxel.render(ctx, "bottom to top text\nthis is a 2nd line", glm.vec2(-1000, 1000), 1, orientation='bottom_to_top')
 
-    def update(self, dt: float, camera: Camera):
+    def update(self, dt: float, ctx: skittle.Context):
         self.age += dt
 
-        self.physball.update(dt, camera)
+        self.physball.update(dt, ctx)
 
         #for i in self.many_hearts.indexes():
         #    self.many_hearts.update_instance(i, lambda old: (old[0], old[1], old[2], old[3], old[4], old[5] + dt * glm.quarter_pi() * 5 * glm.sin(hash(str(i))), old[6]))
@@ -142,7 +140,7 @@ class Test(skittle.window.Window):
     def handle_zoom(self, event: pygame.Event):
         if event.y == 0:
             return
-        self.camera.zoom *= (1.1 if event.y > 0 else 0.9)
+        self.ctx.camera.zoom *= (1.1 if event.y > 0 else 0.9)
 
     def handle_pan(self, event: pygame.Event):
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -156,8 +154,8 @@ class Test(skittle.window.Window):
         if event.type == pygame.MOUSEMOTION:
             if self.panning:
                 current_pos = glm.vec2(event.pos)
-                delta = (current_pos - self.last_mouse_pos) / self.camera.zoom
-                self.camera.move(*delta)
+                delta = (current_pos - self.last_mouse_pos) / self.ctx.camera.zoom
+                self.ctx.camera.move(*delta)
                 self.last_mouse_pos = current_pos
 
 
@@ -171,11 +169,11 @@ class Physball():
         self.speed = 80
         self.accel = 10
 
-    def draw(self, ctx: moderngl.Context, camera: skittle.camera.Camera):
-        skittle.draw.circle(ctx, camera, self.physobj.get_confirmed_pos(), self.size, skittle.color.GREEN)
-        self.physobj._render_bounding_box(ctx, camera)
+    def draw(self, ctx: skittle.Context):
+        skittle.draw.circle(ctx, self.physobj.get_confirmed_pos(), self.size, skittle.color.GREEN)
+        self.physobj._render_bounding_box(ctx)
 
-    def update(self, dt: float, camera: skittle.camera.Camera):
+    def update(self, dt: float, ctx: skittle.Context):
         self.pos = self.physobj.get_confirmed_pos()
 
         self.physobj.try_move(self.pos + glm.vec2(-1, 0) * self.speed * dt)

@@ -10,7 +10,7 @@ type TextRenderOrientation = typing.Literal['left_to_right', 'right_to_left', 't
 class TextRenderer():
     def __init__(
             self,
-            ctx: moderngl.Context,
+            ctx: skittle.Context,
             spritesheet: skittle.resource.Spritesheet,
             codepoints: str,
             rows: int,
@@ -28,7 +28,7 @@ class TextRenderer():
         self.glyph_widths = glyph_widths
         self.skip_invalid_chars = False
 
-        self.mesh = skittle.render.mesh.InstancedSpritesheetMesh(ctx, self.spritesheet)
+        self.mesh = skittle.render.mesh.InstancedSpritesheetMesh(ctx.mgl_ctx, self.spritesheet)
 
 
     def get_character_width(self, char: str) -> int:
@@ -85,12 +85,12 @@ class TextRenderer():
 
         return (longest_line_width, line)
 
-    def render(self, camera: skittle.camera.Camera, text: str, pos: glm.vec2, scale: float = 1, color: skittle.color.Color = skittle.color.WHITE, orientation: TextRenderOrientation = 'left_to_right', layer: int = 0, overlay: bool = False, center: bool = False):
-        camera.submit(lambda: self._render_now(
-            camera, text, pos, scale, color, orientation, overlay, center
-            ), layer=camera.calc_layer(layer, overlay))
+    def render(self, ctx: skittle.Context, text: str, pos: glm.vec2, scale: float = 1, color: skittle.color.Color = skittle.color.WHITE, orientation: TextRenderOrientation = 'left_to_right', layer: int = 0, overlay: bool = False, center: bool = False):
+        ctx.camera.submit(lambda: self._render_now(
+            ctx, text, pos, scale, color, orientation, overlay, center
+            ), layer=ctx.camera.calc_layer(layer, overlay))
 
-    def _render_now(self, camera: skittle.camera.Camera, text: str, pos: glm.vec2, scale: float = 1, color: skittle.color.Color = skittle.color.WHITE, orientation: TextRenderOrientation = 'left_to_right', overlay: bool = False, center: bool = False):
+    def _render_now(self, ctx: skittle.Context, text: str, pos: glm.vec2, scale: float = 1, color: skittle.color.Color = skittle.color.WHITE, orientation: TextRenderOrientation = 'left_to_right', overlay: bool = False, center: bool = False):
         """
         call `render` instead. this function exists to hack around the fact a single mesh could only draw one piece of text per frame, so instead they're indiviudally batched on a layer of abstraction higher than the mesh itself
         """
@@ -153,7 +153,7 @@ class TextRenderer():
         self.mesh.bake_instances(inst_data)
 
         self.mesh._render_now(
-            camera, 
+            ctx, 
             pos if not center else (pos - glm.vec2(block_width, (line + 1) * self.spritesheet.sprite_h) / 2),
             overlay=overlay
             )
@@ -163,7 +163,7 @@ class TextRenderer():
 
 
     @staticmethod
-    def from_json(ctx: moderngl.Context, json_path: str) -> TextRenderer:
+    def from_json(ctx: skittle.Context, json_path: str) -> TextRenderer:
     
         with open(json_path, "rb") as f:
             obj: dict[str, typing.Any] = json.load(f)

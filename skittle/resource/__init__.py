@@ -15,21 +15,21 @@ def image(path: str) -> pygame.Surface:
 def spritesheet(path: str, sprite_w: int = 16, sprite_h: int = 16, sep_x: int = 0, sep_y: int = 0) -> Spritesheet:
     return Spritesheet(image(path), sprite_w, sprite_h, sep_x, sep_y)
 
-def tilemap(ctx: moderngl.Context, path: str) -> skittle.resource.Tilemap:
+def tilemap(ctx: skittle.Context, path: str) -> skittle.resource.Tilemap:
     return skittle.resource.Tilemap.from_json(ctx, path)
 
-def postprocessor(ctx: moderngl.Context, path: str) -> skittle.render.PostProcessEffect:
+def postprocessor(ctx: skittle.Context, path: str) -> skittle.render.PostProcessEffect:
     return skittle.render.PostProcessEffect.from_json(ctx, path)
 
-def program(ctx: moderngl.Context, frag_path: str = "shader/blit.frag", vert_path: str = "shader/blit.vert") -> moderngl.Program:
-    return ctx.program(vertex_shader=_txtfile(vert_path), fragment_shader=_txtfile(frag_path))
+def program(ctx: skittle.Context, frag_path: str = "shader/blit.frag", vert_path: str = "shader/blit.vert") -> moderngl.Program:
+    return ctx.mgl_ctx.program(vertex_shader=_txtfile(vert_path), fragment_shader=_txtfile(frag_path))
 
 def image_from_url(url: str, user_agent_author_contact_label: str) -> pygame.Surface:
     bytes = requests.get(url, headers={'User-Agent': f'skittle engine-based app ({user_agent_author_contact_label})' }).content
     data = io.BytesIO(bytes)
     return pygame.image.load(data)
 
-def pixelfont(ctx: moderngl.Context, path: str, id: str | None = None) -> skittle.render.TextRenderer:
+def pixelfont(ctx: skittle.Context, path: str, id: str | None = None) -> skittle.render.TextRenderer:
     """
     create and return a pixelfont textrenderer object. if an id is passed, it will be added to a cache. this cache can be accessed by id using `skittle.resource.cached_pixelfont`. if this id already exists, overwrites the cache.
     """

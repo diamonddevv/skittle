@@ -3,6 +3,9 @@ import random
 import skittle
 
 class ParticleEmitter():
+    """
+    todo: improve
+    """
     
 
     def __init__(self,
@@ -46,10 +49,10 @@ class ParticleEmitter():
 
         self._particles: list[ParticleInstance] = []
 
-    def draw(self, camera: skittle.camera.Camera):
+    def draw(self, ctx: skittle.Context):
         idata = [particle.to_instance_data() for particle in self._particles]
         self.mesh.bake_instances(idata)
-        self.mesh.render(camera, glm.vec2(0,0))
+        self.mesh.render(ctx, glm.vec2(0,0))
 
     def update(self, dt: float):
         dead = []

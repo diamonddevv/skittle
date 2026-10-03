@@ -81,8 +81,8 @@ class PhysicsObject():
     def get_owner(self):
         return self.owner
 
-    def _render_bounding_box(self, ctx: moderngl.Context, camera: skittle.camera.Camera, layer: int = 10, overlay: bool = False):
-        skittle.draw.rect(ctx, camera, self.rect, skittle.color.EMPTY, outline_col=skittle.color.RED, outline_width=4, layer=layer, overlay=overlay)
+    def _render_bounding_box(self, ctx: skittle.Context, layer: int = 10, overlay: bool = False):
+        skittle.draw.rect(ctx, self.rect, skittle.color.EMPTY, outline_col=skittle.color.RED, outline_width=4, layer=layer, overlay=overlay)
 
     def report_collision(self, other: PhysicsObject):
         self.collision_signal.emit(other)

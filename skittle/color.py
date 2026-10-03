@@ -41,7 +41,7 @@ class Color():
         )
 
 
-    def clear_context(self, ctx: moderngl.Context):
+    def clear_context(self, ctx: skittle.Context):
         ctx.clear(*self.normalised())
 
 EMPTY =     Color(000,  000,  000, 000)

@@ -35,16 +35,16 @@ def uv_quad(w: int = 1, h: int = 1, u0: float = 0.0, v0: float = 0.0, u1: float 
         glm.array.from_numbers(glm.int32, *indices).to_bytes()
         )
 
-def surf_texture(ctx: moderngl.Context, surface: pygame.Surface, filter: int = moderngl.NEAREST) -> moderngl.Texture:
-    tex = ctx.texture(surface.size, 4, pygame.image.tobytes(surface, "RGBA"))
+def surf_texture(mgl_ctx: moderngl.Context, surface: pygame.Surface, filter: int = moderngl.NEAREST) -> moderngl.Texture:
+    tex = mgl_ctx.texture(surface.size, 4, pygame.image.tobytes(surface, "RGBA"))
     tex.filter = (filter, filter)
     return tex
 
 class InstancedBuffer():
-    def __init__(self, ctx: moderngl.Context) -> None:
-        self.ctx = ctx
+    def __init__(self, mgl_ctx: moderngl.Context) -> None:
+        self._mgl_ctx = mgl_ctx
 
-        self._buf = ctx.buffer(reserve=1, dynamic=True)
+        self._buf = self._mgl_ctx.buffer(reserve=1, dynamic=True)
         self._capacity = 1
         self._instances = 0
         self._overshoot = 1.2
@@ -64,7 +64,7 @@ class InstancedBuffer():
             self._instances = instances
             self._buf.release()
             self._capacity = int(self._instances * self._instance_size * self._overshoot)
-            self._buf = self.ctx.buffer(reserve=self._capacity, dynamic=True)
+            self._buf = self._mgl_ctx.buffer(reserve=self._capacity, dynamic=True)
 
     def update_instance(self, instance_data: bytes, index: int):
         self._assert_not_released()

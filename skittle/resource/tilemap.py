@@ -8,7 +8,7 @@ from pyglm import glm
 
 
 class Tilemap():
-    def __init__(self, ctx: moderngl.Context, layout: numpy.ndarray, layout_alpha: numpy.ndarray, width: int, height: int, stitched_tileset: skittle.resource.Spritesheet, tiles: dict[str, tuple[int, int, int]]) -> None:
+    def __init__(self, ctx: skittle.Context, layout: numpy.ndarray, layout_alpha: numpy.ndarray, width: int, height: int, stitched_tileset: skittle.resource.Spritesheet, tiles: dict[str, tuple[int, int, int]]) -> None:
         self._ctx = ctx
 
         self.layout = layout
@@ -43,14 +43,14 @@ class Tilemap():
 
         self.mesh.bake_instances(instances)
 
-    def render(self, camera: skittle.camera.Camera, 
+    def render(self, ctx: skittle.Context, 
                     position: glm.vec2, 
                     scale: glm.vec2 = glm.vec2(1.0), 
                     color: skittle.color.Color = skittle.color.WHITE, 
                     rotation: float = 0.0, 
                     layer: int = 0,
                     overlay: bool = False):
-        self.mesh.render(camera, position, scale, color, rotation, layer, overlay)
+        self.mesh.render(ctx, position, scale, color, rotation, layer, overlay)
     
     def is_empty(self, x: int, y: int) -> bool:
         return self.layout_alpha[x, y] == 0x00
@@ -81,7 +81,7 @@ class Tilemap():
         return f"{n:08x}".lower()
 
     @staticmethod
-    def from_json(ctx: moderngl.Context, path: str) -> Tilemap:
+    def from_json(ctx: skittle.Context, path: str) -> Tilemap:
         f = open(path, "r")
         data = json.load(f)
         f.close()

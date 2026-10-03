@@ -3,10 +3,10 @@ import moderngl
 import skittle
 
 
-type SceneSwitch = typing.Callable[[SceneManager, skittle.context.Context], Scene]
+type SceneSwitch = typing.Callable[[SceneManager, skittle.Context], Scene]
 
 class SceneManager():
-    def __init__(self, ctx: skittle.context.Context, initial_scene: SceneSwitch | None, window: skittle.window.Window) -> None:
+    def __init__(self, ctx: skittle.Context, initial_scene: SceneSwitch | None, window: skittle.window.Window) -> None:
         self.ctx = ctx
         self.window = window
         self.active = None
@@ -16,11 +16,11 @@ class SceneManager():
     def start(self):
         self.active = None if self._initial_scene == None else self._initial_scene(self, self.ctx)
 
-    def draw(self, ctx: skittle.context.Context):
+    def draw(self, ctx: skittle.Context):
         if self.active != None:
             self.active.draw(ctx)
 
-    def update(self, dt: float, ctx: skittle.context.Context):
+    def update(self, dt: float, ctx: skittle.Context):
         if self.active != None:
             self.active.update(dt, ctx)
 
@@ -31,13 +31,13 @@ class SceneManager():
 
 
 class Scene():
-    def __init__(self, scene_manager: SceneManager, ctx: skittle.context.Context) -> None:
+    def __init__(self, scene_manager: SceneManager, ctx: skittle.Context) -> None:
         self.scene_manager = scene_manager
     
-    def draw(self, ctx: skittle.context.Context):
+    def draw(self, ctx: skittle.Context):
         pass
 
-    def update(self, dt: float, ctx: skittle.context.Context):
+    def update(self, dt: float, ctx: skittle.Context):
         pass
 
     def close(self):

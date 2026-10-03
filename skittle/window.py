@@ -24,16 +24,16 @@ class Window():
         self._window_surface = pygame.display.set_mode((window_width, window_height), pygame.RESIZABLE | pygame.OPENGL | pygame.DOUBLEBUF)
         self._clock = pygame.Clock()
 
-        self.mgl_ctx = moderngl.create_context()
-        self.mgl_ctx.enable(moderngl.BLEND)
+        _mgl_ctx = moderngl.create_context()
+        _mgl_ctx.enable(moderngl.BLEND)
         pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MAJOR_VERSION, skittle.__GLSL_MAJOR__)
         pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MINOR_VERSION, skittle.__GLSL_MINOR__)
-        skittle.draw._Meshes._init(self.mgl_ctx)
+        skittle.draw._Meshes._init(_mgl_ctx)
 
-        self.post_processor = skittle.render.PostProcessor(self.mgl_ctx, width, height, window_width, window_height)
-        self.camera = skittle.camera.Camera(width, height, self.post_processor.viewport)
+        self.post_processor = skittle.render.PostProcessor(_mgl_ctx, width, height, window_width, window_height)
+        camera = skittle.camera.Camera(width, height, self.post_processor.viewport)
 
-        self.ctx = skittle.context.Context(self.mgl_ctx, self.camera)
+        self.ctx = skittle.Context(_mgl_ctx, camera)
 
 
         self.scene_manager = skittle.scene.SceneManager(self.ctx, initial_scene, self)
@@ -56,11 +56,11 @@ class Window():
             if not self._running:
                 continue
 
-            self.mgl_ctx.clear()
+            self.ctx.clear()
             self.post_processor.begin_frame()
-            self.camera.begin_frame()
+            self.ctx.camera.begin_frame()
             self.draw(self.ctx)
-            self.camera.flush()
+            self.ctx.camera.flush()
             self.post_processor.flush()
             pygame.display.flip()
 
@@ -70,11 +70,11 @@ class Window():
                 pygame.display.set_caption(self.title)
             dt = self._clock.tick(self.target_fps) / 1000
 
-    def update(self, dt: float, ctx: skittle.context.Context):
+    def update(self, dt: float, ctx: skittle.Context):
         self.scene_manager.update(dt, ctx)
         skittle.tween.update_tweens(dt) # need to change so that physics gets evaluated before this?
 
-    def draw(self, ctx: skittle.context.Context):
+    def draw(self, ctx: skittle.Context):
         self.scene_manager.draw(ctx)
 
     def event_handle(self):
@@ -82,7 +82,7 @@ class Window():
             if e.type == pygame.QUIT:
                 self.close()
             if e.type == pygame.VIDEORESIZE:
-                self.mgl_ctx.viewport = (0, 0, e.w, e.h)
+                self._mgl_ctx.viewport = (0, 0, e.w, e.h)
                 self._window_size = (e.w, e.h)
                 self.post_processor.resize_viewport(e.w, e.h)
                 print(*self._window_size)
@@ -99,7 +99,7 @@ class Window():
         self._running = False
         self.post_processor.release(all=True)
         skittle.audio.AudioManager.INSTANCE.release()
-        self.mgl_ctx.release()
+        self.ctx.mgl_ctx.release()
 
     def switch_scene(self, scene: skittle.scene.SceneSwitch):
         self.scene_manager.switch(scene)
