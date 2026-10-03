@@ -82,11 +82,10 @@ class Window():
             if e.type == pygame.QUIT:
                 self.close()
             if e.type == pygame.VIDEORESIZE:
-                self._mgl_ctx.viewport = (0, 0, e.w, e.h)
+                self.ctx.mgl_ctx.viewport = (0, 0, e.w, e.h)
                 self._window_size = (e.w, e.h)
                 self.post_processor.resize_viewport(e.w, e.h)
-                print(*self._window_size)
-                self.camera.reframe(self.post_processor.viewport)
+                self.ctx.camera.reframe(self.post_processor.viewport)
 
             skittle.input.TextInput._textinput_event(e)
 
