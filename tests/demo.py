@@ -16,7 +16,8 @@ class Test(skittle.window.Window):
 
         self.hearts = skittle.resource.spritesheet("tests/asset/spritesheet.png")
 
-        self.glyphxel = skittle.render.TextRenderer.from_json(self.ctx, "tests/asset/glyphxel_definition.json")
+        self.glyphxel = skittle.resource.pixelfont(self.ctx, "tests/asset/glyphxel_definition.json")
+        self.comic_sans = skittle.resource.sysfont(self.ctx, "comicsansms", 24)
 
         self.heart_mesh = skittle.render.mesh.SpritesheetMesh(self.ctx.mgl_ctx, self.hearts)
         self.many_hearts = skittle.render.mesh.InstancedSpritesheetMesh(self.ctx.mgl_ctx, self.hearts)
@@ -116,6 +117,8 @@ class Test(skittle.window.Window):
         self.glyphxel.render(ctx, "du bist gut genug\nis german for\nyou are good enough", glm.vec2(-1200, 80), center=True)
 
         self.glyphxel.render(ctx, "bottom to top text\nthis is a 2nd line", glm.vec2(-1000, 1000), 1, orientation='bottom_to_top')
+
+        self.comic_sans.render(ctx, "hello, world! this is\nthe shittiest font EVER!", glm.vec2(-1000, 1200))
 
     def update(self, dt: float, ctx: skittle.Context):
         self.age += dt

@@ -1,24 +1,33 @@
 from pyglm import glm
-import moderngl
+import pygame
 import typing
 import skittle
 import json
 
+from skittle.color import WHITE, Color
+
 type TextRenderOrientation = typing.Literal['left_to_right', 'right_to_left', 'top_to_bottom', 'bottom_to_top']
 
 
-class AbstractTextRenderer():
+class TextRenderer():
     def __init__(self, ctx: skittle.Context) -> None:
         self.ctx = ctx
 
-    def render(self):
+    def render(self, ctx: skittle.Context, text: str, pos: glm.vec2, scale: float = 1, color: skittle.color.Color = skittle.color.WHITE, orientation: TextRenderOrientation = 'left_to_right', layer: int = 0, overlay: bool = False, center: bool = False):
+        ctx.camera.submit(lambda: self._render_now(
+            ctx, text, pos, scale, color, orientation, overlay, center
+            ), layer=ctx.camera.calc_layer(layer, overlay))
+
+    def _render_now(self, ctx: skittle.Context, text: str, pos: glm.vec2, scale: float = 1, color: skittle.color.Color = skittle.color.WHITE, orientation: TextRenderOrientation = 'left_to_right', overlay: bool = False, center: bool = False):
         pass
 
-    def _render_now(self):
+    def calculate_size_for_text(self, text: str, scale: float) -> tuple[float, float]:
+        return (0, 0)
+    
+    def release(self):
         pass
 
-
-class TextRenderer():
+class PixelFontRenderer(TextRenderer):
     def __init__(
             self,
             ctx: skittle.Context,
@@ -30,6 +39,8 @@ class TextRenderer():
             default_glyph_width: int = 0, 
             glyph_widths: dict[str, int] = {}
             ) -> None:
+        super().__init__(ctx)
+
         self.spritesheet = spritesheet
         self.codepoints = codepoints
         self.rows = rows
@@ -76,6 +87,8 @@ class TextRenderer():
         return True, ""
     
     def calculate_size_for_text(self, text: str, scale: float) -> tuple[float, float]:
+        super().calculate_size_for_text(text, scale)
+
         longest_line_width = 0
         line_width = 0
         line = 0
@@ -96,15 +109,14 @@ class TextRenderer():
 
         return (longest_line_width, line)
 
-    def render(self, ctx: skittle.Context, text: str, pos: glm.vec2, scale: float = 1, color: skittle.color.Color = skittle.color.WHITE, orientation: TextRenderOrientation = 'left_to_right', layer: int = 0, overlay: bool = False, center: bool = False):
-        ctx.camera.submit(lambda: self._render_now(
-            ctx, text, pos, scale, color, orientation, overlay, center
-            ), layer=ctx.camera.calc_layer(layer, overlay))
+    
 
     def _render_now(self, ctx: skittle.Context, text: str, pos: glm.vec2, scale: float = 1, color: skittle.color.Color = skittle.color.WHITE, orientation: TextRenderOrientation = 'left_to_right', overlay: bool = False, center: bool = False):
         """
         call `render` instead. this function exists to hack around the fact a single mesh could only draw one piece of text per frame, so instead they're indiviudally batched on a layer of abstraction higher than the mesh itself
         """
+        super()._render_now(ctx, text, pos, scale, color, orientation, overlay, center)
+
         if self.caps_only:
             text = text.upper()
 
@@ -170,16 +182,17 @@ class TextRenderer():
             )
 
     def release(self):
+        super().release()
         self.mesh.release()
 
 
     @staticmethod
-    def from_json(ctx: skittle.Context, json_path: str) -> TextRenderer:
+    def from_json(ctx: skittle.Context, json_path: str) -> PixelFontRenderer:
     
         with open(json_path, "rb") as f:
             obj: dict[str, typing.Any] = json.load(f)
         
-        return TextRenderer(
+        return PixelFontRenderer(
             ctx, 
             skittle.resource.spritesheet(
                 obj["spritesheet_path"], 
@@ -198,5 +211,47 @@ class TextRenderer():
     
 
 
-class TtfRenderer():
-    pass
+class TtfRenderer(TextRenderer):
+    def __init__(self, ctx: skittle.Context, pygame_font: pygame.font.Font) -> None:
+        super().__init__(ctx)
+        self.pygame_font = pygame_font
+        self.mesh = skittle.render.texture(ctx, None)
+
+        self._renderbuf: pygame.Surface | None = None
+        self._rendered_text = ""
+
+    def _render_now(self, ctx: skittle.Context, text: str, pos: glm.vec2, scale: float = 1, color: Color = skittle.color.WHITE, orientation: TextRenderOrientation = 'left_to_right', overlay: bool = False, center: bool = False):
+        super()._render_now(ctx, text, pos, scale, color, orientation, overlay, center)
+
+        w, h = self.calculate_size_for_text(text, scale)
+        surf = self._get_surface(text)
+        self.mesh.load_texture_whole(surf)
+        self.mesh._render_now(
+            ctx, 
+            pos if not center else (pos - glm.vec2(w, h) / 2),
+            overlay=overlay
+            )
+
+    
+    def calculate_size_for_text(self, text: str, scale: float) -> tuple[float, float]:
+        super().calculate_size_for_text(text, scale)
+        surf = self._get_surface(text)
+        return (surf.width * scale, surf.height * scale)
+    
+    def _get_surface(self, text: str) -> pygame.Surface:
+        if self._renderbuf == None or text != self._rendered_text:
+            self._renderbuf = self.pygame_font.render(text, False, 0xFFFFFFFF)
+            self._rendered_text = text
+        return self._renderbuf
+    
+    def release(self):
+        super().release()
+        del self.pygame_font
+    
+    @staticmethod
+    def from_file(ctx: skittle.Context, font_file_path: str, font_size: int) -> TtfRenderer:
+        return TtfRenderer(ctx, pygame.font.Font(font_file_path, font_size))
+    
+    @staticmethod
+    def from_sysfont(ctx: skittle.Context, sysfont: str, font_size: int, bold: bool = False, italic: bool = False) -> TtfRenderer:
+        return TtfRenderer(ctx, pygame.font.SysFont(sysfont, font_size, bold, italic))

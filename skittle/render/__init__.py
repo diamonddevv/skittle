@@ -10,8 +10,13 @@ from skittle.render.particle import *
 from skittle.render.postprocess import *
 
 
-def texture(ctx: skittle.Context, surface: pygame.Surface, force_size: tuple[int, int] | None = None) -> skittle.render.mesh.TextureMesh:
-    return skittle.render.mesh.TextureMesh(ctx.mgl_ctx, surface, force_size[0] if force_size != None else surface.width, force_size[1] if force_size != None else surface.height)
+def texture(ctx: skittle.Context, surface: pygame.Surface | None, force_size: tuple[int, int] | None = None) -> skittle.render.mesh.TextureMesh:
+    return skittle.render.mesh.TextureMesh(
+        ctx.mgl_ctx, 
+        surface, 
+        force_size[0] if force_size != None else (surface.width if surface != None else 1), 
+        force_size[1] if force_size != None else (surface.height if surface != None else 1)
+        )
 
 def spritesheet(ctx: skittle.Context, spritesheet: skittle.resource.Spritesheet, sprite: tuple[int, int] = (0, 0)) -> skittle.render.mesh.SpritesheetMesh:
     return skittle.render.mesh.SpritesheetMesh(ctx.mgl_ctx, spritesheet, frame=sprite)
