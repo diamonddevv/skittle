@@ -25,6 +25,8 @@ class PostProcessor():
         self.ping_tex: moderngl.Texture
         self.pong_tex: moderngl.Texture
 
+        self._last_texture: moderngl.Texture
+
         self.window_size = (window_width, window_height)
         self.viewport = self._compute_viewport(*self.window_size)
 
@@ -80,6 +82,8 @@ class PostProcessor():
         )
 
     def _present(self, texture: moderngl.Texture):
+        self._last_texture = texture
+
         self._mgl_ctx.screen.use()
         self._mgl_ctx.viewport = (0, 0, *self.window_size)
 

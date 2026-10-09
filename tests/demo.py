@@ -132,7 +132,7 @@ class Test(skittle.window.Window):
         if keyclick[skittle.input.KEY_SPACE]: skittle.audio.play_sound('scotland', pitch=random.uniform(0.9, 1.1))
         if keyclick[skittle.input.KEY_s]: self.post_processor.toggle_active("crt")
         if keyclick[skittle.input.KEY_t]: skittle.tween.tween(self.tween_pos, self, "tween_pos", 3, self.tween_pos + glm.vec2(-1400, 500), skittle.tween.EASE_LINEAR)
-        if keyclick[skittle.input.KEY_f]: wnd.request_screenshot("ss.png")
+        if keyclick[skittle.input.KEY_f]: ctx.request_screenshot("ss.png")
 
         self.phys_world.update(dt)
         skittle.tween.update_tweens(dt)

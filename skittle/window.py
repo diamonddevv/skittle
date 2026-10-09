@@ -66,11 +66,12 @@ class Window():
             pygame.display.flip()
 
             if self.ctx._screenshot_request != None:
-                data = self.ctx.mgl_ctx.screen.read()
-                img = pygame.image.frombuffer(data, self.ctx.mgl_ctx.screen.size, "RGB")
+                data = self.post_processor._last_texture.read()
+                img = pygame.image.frombuffer(data, self.post_processor._last_texture.size, "RGBA")
                 img = pygame.transform.flip(img, False, True)
                 pygame.image.save(img, self.ctx._screenshot_request)
                 self.ctx._screenshot_request = None
+                print("saved ss")
 
             if self._fps_in_title:
                 pygame.display.set_caption(f"{self.title} | FPS: {self._clock.get_fps():.0f}")    
