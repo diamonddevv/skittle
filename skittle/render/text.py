@@ -7,6 +7,17 @@ import json
 type TextRenderOrientation = typing.Literal['left_to_right', 'right_to_left', 'top_to_bottom', 'bottom_to_top']
 
 
+class AbstractTextRenderer():
+    def __init__(self, ctx: skittle.Context) -> None:
+        self.ctx = ctx
+
+    def render(self):
+        pass
+
+    def _render_now(self):
+        pass
+
+
 class TextRenderer():
     def __init__(
             self,
@@ -184,3 +195,8 @@ class TextRenderer():
             obj.get("default_glyph_width", 0),
             obj.get("glyph_widths", {}),
         )
+    
+
+
+class TtfRenderer():
+    pass
