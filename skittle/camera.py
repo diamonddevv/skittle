@@ -80,6 +80,8 @@ class Camera():
                 func()
         self._submissions.clear()
 
+        
+
 
     def set_position(self, x: float, y: float):
         self.position = glm.vec2(x, y)

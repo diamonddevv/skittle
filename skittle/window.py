@@ -32,6 +32,7 @@ class Window():
 
         self.post_processor = skittle.render.PostProcessor(_mgl_ctx, width, height, window_width, window_height)
         camera = skittle.camera.Camera(width, height, self.post_processor.viewport)
+        
 
         self.ctx = skittle.Context(_mgl_ctx, camera)
 
@@ -63,6 +64,13 @@ class Window():
             self.ctx.camera.flush()
             self.post_processor.flush()
             pygame.display.flip()
+
+            if self.ctx._screenshot_request != None:
+                data = self.ctx.mgl_ctx.screen.read()
+                img = pygame.image.frombuffer(data, self.ctx.mgl_ctx.screen.size, "RGB")
+                img = pygame.transform.flip(img, False, True)
+                pygame.image.save(img, self.ctx._screenshot_request)
+                self.ctx._screenshot_request = None
 
             if self._fps_in_title:
                 pygame.display.set_caption(f"{self.title} | FPS: {self._clock.get_fps():.0f}")    
@@ -102,3 +110,5 @@ class Window():
 
     def switch_scene(self, scene: skittle.scene.SceneSwitch):
         self.scene_manager.switch(scene)
+
+    

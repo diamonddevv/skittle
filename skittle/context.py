@@ -12,5 +12,10 @@ class Context():
         self.mgl_ctx = mgl_ctx
         self.camera = camera
 
+        self._screenshot_request: str | None = None
+
     def clear(self, r: float = 0.0, g: float = 0.0, b: float = 0.0, a: float = 1.0):
         self.mgl_ctx.clear(r, g, b, a)
+
+    def request_screenshot(self, path: str):
+        self._screenshot_request = path
